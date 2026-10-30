@@ -113,11 +113,11 @@ func _spawn_player(pid: int) -> void:
 	player.name = str(pid)
 	player.setup(pid, is_local, data["name"], data["color"])
 	var markers := spawn_points.get_children()
-	if is_local and not markers.is_empty():
+	if not is_local and Game.player_pos.has(pid):
+		player.position = Game.player_pos[pid]
+	elif not markers.is_empty():
 		var marker := markers[int(data["spawn"]) % markers.size()] as Node3D
 		player.position = marker.global_position
-	elif Game.player_pos.has(pid):
-		player.position = Game.player_pos[pid]
 	players_root.add_child(player)
 	Game.player_nodes[pid] = player
 

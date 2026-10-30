@@ -214,10 +214,20 @@ func _drop() -> void:
 	if data.is_empty():
 		return
 	if int(data["item"]) != -1:
-		var forward := -global_transform.basis.z
-		Game.request("_srv_drop_item", [global_position + forward * 1.0])
+		Game.request("_srv_drop_item", [_drop_position()])
 	elif data["load_kind"] != "":
 		Game.request("_srv_return_load")
+
+
+## Suelta el tesoro a tus pies (dentro de tu propio hueco, así nunca queda
+## metido dentro de una torre o una máquina) y sobre lo que haya debajo.
+func _drop_position() -> Vector3:
+	var origin := global_position - global_transform.basis.z * 0.3 + Vector3.UP * 0.5
+	var query := PhysicsRayQueryParameters3D.create(origin, origin + Vector3.DOWN * 3.0, Visuals.LAYER_WORLD)
+	var hit := get_world_3d().direct_space_state.intersect_ray(query)
+	if hit.is_empty():
+		return Vector3(origin.x, 0.0, origin.z)
+	return hit["position"]
 
 
 func _update_sack() -> void:

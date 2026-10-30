@@ -13,6 +13,8 @@ var _upgrades_list: VBoxContainer
 var _wallet_label: Label
 var _pause_panel: PanelContainer
 var _toast_tween: Tween
+var _upgrade_buttons := {}  # id de mejora -> Button
+var _shown_levels := ""
 
 
 func _ready() -> void:
@@ -192,7 +194,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		else:
 			_open_pause()
 		get_viewport().set_input_as_handled()
-	elif event is InputEventMouseButton and event.is_pressed() and not is_menu_open():
+	# Se recaptura al soltar el clic, para que ese mismo clic no interactúe.
+	elif event is InputEventMouseButton and event.is_released() and not is_menu_open():
 		if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 			get_viewport().set_input_as_handled()
@@ -225,8 +228,9 @@ func _on_game_changed(what: String, id: int) -> void:
 				_refresh_carry()
 		"economy":
 			_refresh_info()
+			_refresh_carry()
 			if _upgrades_panel.visible:
-				_rebuild_upgrades()
+				_refresh_upgrades()
 		_:
 			_refresh_all()
 
@@ -287,9 +291,25 @@ func _refresh_noise() -> void:
 	_noise_bar.modulate = Color(0.45, 0.85, 0.45).lerp(Color(1.0, 0.3, 0.2), t)
 
 
+## Cambia el dinero muy a menudo (tobogán, compañeros...): si no ha cambiado
+## ningún nivel, solo se actualizan los botones para no perder clics.
+func _refresh_upgrades() -> void:
+	if str(Game.upgrades) != _shown_levels:
+		_rebuild_upgrades()
+		return
+	_wallet_label.text = "Paga disponible: %d" % Game.wallet
+	for id in _upgrade_buttons:
+		var cost: int = Game.upgrade_cost(id)
+		var button: Button = _upgrade_buttons[id]
+		button.disabled = cost < 0 or Game.wallet < cost
+
+
 func _rebuild_upgrades() -> void:
 	for child in _upgrades_list.get_children():
+		_upgrades_list.remove_child(child)
 		child.queue_free()
+	_upgrade_buttons.clear()
+	_shown_levels = str(Game.upgrades)
 	_wallet_label.text = "Paga disponible: %d" % Game.wallet
 	for id in Balance.UPGRADE_ORDER:
 		var definition: Dictionary = Balance.UPGRADES[id]
@@ -310,5 +330,6 @@ func _rebuild_upgrades() -> void:
 			button.text = "Comprar (%d)" % cost
 			button.disabled = Game.wallet < cost
 			button.pressed.connect(Game.request.bind("_srv_buy", [id]))
+		_upgrade_buttons[id] = button
 		row.add_child(button)
 		_upgrades_list.add_child(row)
