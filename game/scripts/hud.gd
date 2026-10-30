@@ -64,8 +64,12 @@ func _build() -> void:
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(root)
 
-	_info = _label(root, 22)
-	_place(_info, 0, 0, 0, 0, 24, 16, 600, 140)
+	var info_panel := PanelContainer.new()
+	info_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	info_panel.add_theme_stylebox_override("panel", _panel_style(Color(0.05, 0.08, 0.09, 0.6)))
+	root.add_child(info_panel)
+	_place(info_panel, 0, 0, 0, 0, 20, 16, 400, 16)
+	_info = _label(info_panel, 20)
 
 	var crosshair := _label(root, 30, HORIZONTAL_ALIGNMENT_CENTER)
 	crosshair.text = "·"
@@ -89,6 +93,12 @@ func _build() -> void:
 	_noise_bar = ProgressBar.new()
 	_noise_bar.max_value = Balance.NOISE_MAX
 	_noise_bar.show_percentage = false
+	var bar_bg := _panel_style(Color(0.05, 0.08, 0.09, 0.7))
+	bar_bg.set_content_margin_all(0)
+	_noise_bar.add_theme_stylebox_override("background", bar_bg)
+	var bar_fill := _panel_style(Color(1, 1, 1))
+	bar_fill.set_content_margin_all(0)
+	_noise_bar.add_theme_stylebox_override("fill", bar_fill)
 	_noise_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(_noise_bar)
 	_place(_noise_bar, 0.5, 0, 0.5, 0, -170, 38, 170, 56)
@@ -145,6 +155,17 @@ func _build_pause_panel(root: Control) -> void:
 	quit.text = "Salir al menú"
 	quit.pressed.connect(_quit_to_menu)
 	box.add_child(quit)
+
+
+func _panel_style(bg: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = bg
+	style.set_corner_radius_all(12)
+	style.content_margin_left = 16
+	style.content_margin_right = 16
+	style.content_margin_top = 10
+	style.content_margin_bottom = 10
+	return style
 
 
 func _margin_box(panel: PanelContainer) -> VBoxContainer:
@@ -238,7 +259,7 @@ func _on_game_changed(what: String, id: int) -> void:
 func _on_game_event(ev_name: String, data: Dictionary) -> void:
 	match ev_name:
 		"snort":
-			toast("¡%s ronca, se revuelve y da un manotazo! %s sale volando" % [Balance.SLEEPER_NAME_CAP, data.get("name", "")], Color(1.0, 0.55, 0.35))
+			toast("¡%s mete la mano por la rendija! Va a por %s: ¡corre!" % [Balance.SLEEPER_NAME_CAP, data.get("name", "")], Color(1.0, 0.55, 0.35))
 		"bought":
 			var upgrade: Dictionary = Balance.UPGRADES.get(data.get("upgrade", ""), {})
 			toast("%s ha comprado: %s (nivel %d)" % [data.get("name", ""), upgrade.get("name", "?"), int(data.get("level", 0))], Color(0.7, 1.0, 0.7))
@@ -257,9 +278,13 @@ func _refresh_all() -> void:
 	_win.visible = Game.completed
 
 
+## Dónde está cada miga ahora mismo, para que se vea avanzar cada paso.
 func _refresh_info() -> void:
 	var lines := PackedStringArray()
-	lines.append("Migas recogidas: %d / %d" % [Game.crumbs_sorted(), Game.crumbs_total()])
+	lines.append("En los cuencos: %d / %d" % [Game.crumbs_sorted(), Game.crumbs_total()])
+	lines.append("   Montaña: %d · Tolva: %d · Cubetas: %d" % [
+		Game.crumb_sum(Game.pile), Game.crumb_sum(Game.hopper), Game.crumb_sum(Game.bins),
+	])
 	lines.append("Objetos devueltos: %d / %d" % [Game.items_placed(), Game.items.size()])
 	lines.append("Calderilla: %d" % Game.wallet)
 	var workers := int(Game.upgrade_value("workers"))

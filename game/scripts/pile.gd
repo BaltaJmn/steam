@@ -114,17 +114,20 @@ func get_prompt(_player: Node, _part: String) -> String:
 	return "[E] Recoger migas (mantén pulsado) · quedan %d" % total
 
 
-func interact(_player: Node, _part: String) -> void:
-	_try_scoop()
+func interact(player: Node, _part: String) -> void:
+	_try_scoop(player)
 
 
-func interact_hold(_player: Node, _part: String, _delta: float) -> void:
-	_try_scoop()
+func interact_hold(player: Node, _part: String, _delta: float) -> void:
+	_try_scoop(player)
 
 
-func _try_scoop() -> void:
+func _try_scoop(player: Node) -> void:
 	var now := Time.get_ticks_msec() / 1000.0
 	if now - _last_scoop < Balance.SCOOP_COOLDOWN:
 		return
 	_last_scoop = now
+	var data: Dictionary = Game.me()
+	if not data.is_empty() and Game.load_total(data) < Game.capacity() and data["load_kind"] in ["", "mixed"]:
+		player.call("play_scoop")
 	Game.request("_srv_scoop")

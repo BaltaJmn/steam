@@ -688,7 +688,7 @@ func _add_noise(sender: int, amount: float) -> void:
 		_snort()
 
 
-## Papá ronca fuerte y se da la vuelta: sale volando quien más ruido ha hecho.
+## Papá se revuelve y mete la mano por la rendija: va a por quien más ruido ha hecho.
 func _snort() -> void:
 	var target := -1
 	var loudest := -1.0
@@ -702,7 +702,8 @@ func _snort() -> void:
 	var who := ""
 	if players.has(target):
 		who = players[target]["name"]
-	_event("snort", {"target": target, "name": who})
+	var target_pos: Vector3 = player_pos.get(target, Vector3.ZERO)
+	_event("snort", {"target": target, "name": who, "pos": target_pos})
 
 
 func _check_complete() -> void:

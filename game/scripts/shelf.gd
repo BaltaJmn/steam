@@ -16,10 +16,10 @@ const BOARD_HEIGHT := 0.94
 func _ready() -> void:
 	var count := slot_types.size()
 	var width := maxf(1.2, spacing * count + 0.4)
-	Visuals.mesh_instance(self, Visuals.box_mesh(Vector3(width, 0.08, 0.6)), Vector3(0, BOARD_HEIGHT - 0.04, 0), "wood")
-	Visuals.mesh_instance(self, Visuals.box_mesh(Vector3(width, 1.8, 0.06)), Vector3(0, 0.9, -0.32), "wood")
+	Visuals.mesh_instance(self, Visuals.box_mesh(Vector3(width, 0.08, 0.6)), Vector3(0, BOARD_HEIGHT - 0.04, 0), "tray")
+	Visuals.mesh_instance(self, Visuals.box_mesh(Vector3(width, 1.8, 0.06)), Vector3(0, 0.9, -0.32), "tray")
 	for x in [-width / 2.0 + 0.05, width / 2.0 - 0.05]:
-		Visuals.mesh_instance(self, Visuals.box_mesh(Vector3(0.08, BOARD_HEIGHT - 0.08, 0.55)), Vector3(x, (BOARD_HEIGHT - 0.08) / 2.0, 0), "wood")
+		Visuals.mesh_instance(self, Visuals.box_mesh(Vector3(0.08, BOARD_HEIGHT - 0.08, 0.55)), Vector3(x, (BOARD_HEIGHT - 0.08) / 2.0, 0), "tray")
 	Visuals.static_box(self, Vector3(width, BOARD_HEIGHT, 0.65), Vector3(0, BOARD_HEIGHT / 2.0, 0), Visuals.LAYER_WORLD)
 	Visuals.label(self, title, Vector3(0, 1.6, -0.27), 72, Color(1.0, 0.88, 0.55), false)
 	for i in count:

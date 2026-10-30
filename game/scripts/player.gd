@@ -8,6 +8,9 @@ const JUMP_VELOCITY := 4.8
 const MOUSE_SENSITIVITY := 0.0025
 const SYNC_INTERVAL := 0.05
 const NOISE_SEND_INTERVAL := 0.5
+# Recipientes según el nivel de la mejora "Cubo más grande":
+# [radio, alto, material]. Tapón de botella, vaso de chupito, taza y tazón.
+const CONTAINERS := [[0.13, 0.08, "red"], [0.1, 0.2, "glass"], [0.14, 0.18, "white"], [0.2, 0.14, "bowl"]]
 
 var peer_id := 1
 var is_local := false
@@ -25,7 +28,19 @@ var _target_pos := Vector3.ZERO
 var _target_yaw := 0.0
 var _target_pitch := 0.0
 var _spawn_pos := Vector3.ZERO
-var _sack: MeshInstance3D
+var _container: Node3D
+var _container_level := -1
+var _container_height := 0.1
+var _fill_mesh: CylinderMesh
+var _fill: MeshInstance3D
+var _last_amount := -1
+var _last_kind := ""
+var _spoon: Node3D
+var _spoon_anim := 0.0
+var _burst: GPUParticles3D
+var _burst_mesh: BoxMesh
+var _bob_time := 0.0
+var _shake := 0.0
 
 @onready var head: Node3D = $Head
 @onready var camera: Camera3D = $Head/Camera
@@ -48,6 +63,7 @@ func _ready() -> void:
 	_hud = get_tree().get_first_node_in_group("hud")
 	if is_local:
 		camera.make_current()
+		_build_first_person()
 	else:
 		camera.current = false
 
@@ -60,6 +76,8 @@ func _build_body() -> void:
 	var overalls := StandardMaterial3D.new()
 	overalls.albedo_color = color
 	overalls.roughness = 0.8
+	overalls.diffuse_mode = BaseMaterial3D.DIFFUSE_TOON
+	overalls.next_pass = Visuals.outline()
 	var torso := CapsuleMesh.new()
 	torso.radius = 0.3
 	torso.height = 1.05
@@ -88,13 +106,42 @@ func _build_body() -> void:
 	body.visible = not is_local
 	name_label.visible = not is_local
 
-	_sack = MeshInstance3D.new()
-	var sphere := SphereMesh.new()
-	sphere.radius = 0.18
-	sphere.height = 0.3
-	_sack.mesh = sphere
-	_sack.visible = false
-	hold_point.add_child(_sack)
+	_container = Node3D.new()
+	_container.visible = false
+	hold_point.add_child(_container)
+
+
+## Lo que solo ve el jugador local: la cuchara en la mano y las migas que saltan.
+func _build_first_person() -> void:
+	_spoon = Node3D.new()
+	_spoon.position = Vector3(-0.32, -0.3, -0.62)
+	camera.add_child(_spoon)
+	Visuals.mesh_instance(_spoon, Visuals.box_mesh(Vector3(0.03, 0.015, 0.32)), Vector3(0, 0, 0.12), "metal")
+	var spoon_bowl := SphereMesh.new()
+	spoon_bowl.radius = 0.065
+	spoon_bowl.height = 0.05
+	var bowl_instance := Visuals.mesh_instance(_spoon, spoon_bowl, Vector3(0, 0, -0.08), "metal")
+	bowl_instance.scale = Vector3(1.0, 1.0, 1.35)
+
+	_burst = GPUParticles3D.new()
+	_burst.top_level = true
+	_burst.one_shot = true
+	_burst.emitting = false
+	_burst.amount = 24
+	_burst.lifetime = 0.7
+	_burst.explosiveness = 1.0
+	var burst_process := ParticleProcessMaterial.new()
+	burst_process.direction = Vector3(0, 1, 0)
+	burst_process.spread = 55.0
+	burst_process.initial_velocity_min = 1.5
+	burst_process.initial_velocity_max = 3.5
+	burst_process.gravity = Vector3(0, -9.8, 0)
+	burst_process.scale_min = 0.5
+	burst_process.scale_max = 1.2
+	_burst.process_material = burst_process
+	_burst_mesh = Visuals.box_mesh(Vector3(0.07, 0.07, 0.07))
+	_burst.draw_pass_1 = _burst_mesh
+	add_child(_burst)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -139,7 +186,7 @@ func _physics_process(delta: float) -> void:
 	_knock_timer = maxf(0.0, _knock_timer - delta)
 
 	if is_on_floor() and not was_on_floor:
-		if _fall_speed > 5.0:
+		if _fall_speed > Balance.NOISE_LAND_MIN_SPEED:
 			_noise_acc += Balance.NOISE_LAND
 		_fall_speed = 0.0
 	if sprinting and is_on_floor():
@@ -152,6 +199,7 @@ func _physics_process(delta: float) -> void:
 	_send_transform(delta)
 	_update_interaction(delta, controls)
 	_update_sack()
+	_update_camera_feel(delta)
 
 
 func _controls_enabled() -> bool:
@@ -236,16 +284,97 @@ func _drop_position() -> Vector3:
 	return hit["position"]
 
 
+## El recipiente que llevas en la mano (cambia con la mejora) y las migas dentro.
 func _update_sack() -> void:
+	var level := Game.upgrade_level("sack")
+	if level != _container_level:
+		_build_container(level)
 	var data: Dictionary = Game.players.get(peer_id, {})
 	var amount: int = Game.load_total(data)
-	_sack.visible = amount > 0
+	_container.visible = amount > 0
 	if amount <= 0:
 		return
-	var fraction := clampf(float(amount) / maxf(1.0, float(Game.capacity())), 0.0, 1.0)
-	_sack.scale = Vector3.ONE * (0.6 + 0.8 * fraction)
 	var kind: String = data["load_kind"]
-	_sack.material_override = Visuals.mat("crumbs" if kind == "mixed" else kind)
+	if amount == _last_amount and kind == _last_kind:
+		return
+	_last_amount = amount
+	_last_kind = kind
+	var fraction := clampf(float(amount) / maxf(1.0, float(Game.capacity())), 0.0, 1.0)
+	_fill_mesh.material = Visuals.mat("crumbs" if kind == "mixed" else kind)
+	_fill_mesh.height = maxf(0.01, fraction * _container_height * 0.9)
+	_fill.position.y = _fill_mesh.height / 2.0
+
+
+func _build_container(level: int) -> void:
+	_container_level = level
+	_last_amount = -1
+	for child in _container.get_children():
+		child.queue_free()
+	var spec: Array = CONTAINERS[clampi(level, 0, CONTAINERS.size() - 1)]
+	var radius: float = spec[0]
+	_container_height = spec[1]
+	var cup := CylinderMesh.new()
+	cup.top_radius = radius
+	cup.bottom_radius = radius * 0.9
+	cup.height = _container_height
+	cup.cap_top = false
+	var cup_material := Visuals.mat(spec[2]).duplicate() as StandardMaterial3D
+	cup_material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	cup.material = cup_material
+	Visuals.mesh_instance(_container, cup, Vector3(0, _container_height / 2.0, 0))
+	if level == 2:
+		var handle := TorusMesh.new()
+		handle.inner_radius = 0.05
+		handle.outer_radius = 0.075
+		var handle_instance := Visuals.mesh_instance(_container, handle, Vector3(radius + 0.04, _container_height / 2.0, 0), "white")
+		handle_instance.rotation_degrees = Vector3(90, 0, 0)
+	_fill_mesh = CylinderMesh.new()
+	_fill_mesh.top_radius = radius * 0.85
+	_fill_mesh.bottom_radius = radius * 0.8
+	_fill = Visuals.mesh_instance(_container, _fill_mesh, Vector3.ZERO)
+
+
+## Balanceo al andar, temblor (manotazos) y la cuchara.
+func _update_camera_feel(delta: float) -> void:
+	var speed := Vector2(velocity.x, velocity.z).length()
+	if is_on_floor() and speed > 0.5:
+		_bob_time += delta * speed * 2.2
+	var bob := sin(_bob_time) * 0.035 * clampf(speed / WALK_SPEED, 0.0, 1.5)
+	_shake = maxf(0.0, _shake - delta * 0.8)
+	camera.v_offset = bob + randf_range(-1.0, 1.0) * _shake * 0.3
+	camera.h_offset = randf_range(-1.0, 1.0) * _shake * 0.3
+	if _spoon:
+		_spoon_anim = maxf(0.0, _spoon_anim - delta * 4.0)
+		var dip := sin(_spoon_anim * PI)
+		_spoon.rotation = Vector3(-0.35 - dip * 0.9, 0.25, 0.0)
+		_spoon.scale = Vector3.ONE * (1.0 + Game.upgrade_level("shovel") * 0.3)
+
+
+func add_shake(amount: float) -> void:
+	_shake = maxf(_shake, amount)
+
+
+## Efectos de recoger migas (los llama la montaña).
+func play_scoop() -> void:
+	_spoon_anim = 1.0
+	_play_burst("crumbs")
+
+
+## Efectos de vaciar el recipiente (los llaman la tolva y los cuencos).
+func play_dump() -> void:
+	var data: Dictionary = Game.me()
+	if data.is_empty() or data["load_kind"] == "":
+		return
+	var kind: String = data["load_kind"]
+	_play_burst("crumbs" if kind == "mixed" else kind)
+
+
+func _play_burst(material_key: String) -> void:
+	if _burst == null or not ray.is_colliding():
+		return
+	_burst_mesh.material = Visuals.mat(material_key)
+	_burst.global_position = ray.get_collision_point()
+	_burst.restart()
 
 
 func set_remote_transform(pos: Vector3, yaw: float, pitch: float) -> void:

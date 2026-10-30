@@ -18,7 +18,7 @@ script = ExtResource("1_world")
 script = ExtResource("2_cave")
 
 [node name="Dad" parent="." instance=ExtResource("3_sleeper")]
-position = Vector3(0, 0, -12)
+position = Vector3(0, 0, -6)
 
 [node name="Pile" parent="." instance=ExtResource("4_pile")]
 position = Vector3(0, 0, -6)

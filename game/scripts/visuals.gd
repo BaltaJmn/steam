@@ -14,7 +14,15 @@ const PLASTIC_COLORS := {
 	"yellow": Color(1.0, 0.82, 0.1), "white": Color(0.95, 0.95, 0.92),
 }
 
+# Materiales que llevan contorno oscuro (estilo dibujo animado). Las paredes y
+# el suelo no lo llevan: con cajas tan grandes el contorno no aporta.
+const OUTLINED := [
+	"crumbs", "popcorn", "puff", "cookie", "red", "blue", "yellow", "white", "gold", "silver",
+	"remote", "skin", "sleeve", "ant", "helmet", "bowl", "wood", "metal", "lint", "tray", "cork",
+]
+
 static var _materials := {}
+static var _outline: StandardMaterial3D
 
 
 static func mat(key: String) -> StandardMaterial3D:
@@ -60,15 +68,23 @@ static func mat(key: String) -> StandardMaterial3D:
 			m.roughness = 0.4
 		# El sofá
 		"fabric":
-			m.albedo_color = Color(0.45, 0.27, 0.18)
+			# Pana: el ruido estirado en un eje parece el canalé de la tela.
+			m.albedo_color = Color(0.13, 0.33, 0.34)
 			m.roughness = 1.0
-			_add_noise_normal(m, FastNoiseLite.TYPE_SIMPLEX, 0.05, 10.0)
+			_add_noise_normal(m, FastNoiseLite.TYPE_SIMPLEX, 0.08, 1.0)
+			m.uv1_scale = Vector3(40.0, 1.5, 1.0)
 		"cushion":
-			m.albedo_color = Color(0.55, 0.33, 0.21)
+			m.albedo_color = Color(0.17, 0.4, 0.41)
 			m.roughness = 1.0
-			_add_noise_normal(m, FastNoiseLite.TYPE_SIMPLEX, 0.05, 6.0)
+			_add_noise_normal(m, FastNoiseLite.TYPE_SIMPLEX, 0.08, 1.0)
+			m.uv1_scale = Vector3(30.0, 1.5, 1.0)
+		"seam":
+			m.albedo_color = Color(0.08, 0.22, 0.23)
+			m.roughness = 1.0
+		"thread":
+			m.albedo_color = Color(0.85, 0.78, 0.55)
 		"lint":
-			m.albedo_color = Color(0.62, 0.62, 0.66)
+			m.albedo_color = Color(0.7, 0.68, 0.78)
 			m.roughness = 1.0
 			_add_noise_normal(m, FastNoiseLite.TYPE_CELLULAR, 0.2, 2.0)
 		"screen":
@@ -92,8 +108,25 @@ static func mat(key: String) -> StandardMaterial3D:
 			m.metallic = 0.9
 			m.roughness = 0.35
 		"bowl":
-			m.albedo_color = Color(0.3, 0.6, 0.9)
+			m.albedo_color = Color(0.95, 0.42, 0.33)
 			m.roughness = 0.3
+		"tray":
+			m.albedo_color = Color(0.92, 0.9, 0.82)
+			m.roughness = 0.4
+		"cork":
+			m.albedo_color = Color(0.72, 0.52, 0.32)
+			m.roughness = 1.0
+			_add_noise_normal(m, FastNoiseLite.TYPE_CELLULAR, 0.3, 2.0)
+		"glass":
+			m.albedo_color = Color(0.8, 0.92, 1.0, 0.35)
+			m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			m.roughness = 0.05
+		"note_yellow", "note_pink", "note_blue":
+			m.albedo_color = {"note_yellow": Color(1.0, 0.92, 0.4), "note_pink": Color(1.0, 0.6, 0.75), "note_blue": Color(0.55, 0.85, 1.0)}[key]
+		"sleeve":
+			# Pijama de franela de papá.
+			m.albedo_color = Color(0.32, 0.4, 0.62)
+			m.roughness = 0.9
 		# Papá, las hormigas y la cuadrilla
 		"skin":
 			m.albedo_color = Color(0.95, 0.74, 0.6)
@@ -114,8 +147,30 @@ static func mat(key: String) -> StandardMaterial3D:
 			m.albedo_color = Color(0.92, 0.95, 1.0)
 		_:
 			m.albedo_color = Color.MAGENTA
+	if m.shading_mode != BaseMaterial3D.SHADING_MODE_UNSHADED:
+		m.diffuse_mode = BaseMaterial3D.DIFFUSE_TOON
+		m.specular_mode = BaseMaterial3D.SPECULAR_TOON
+		m.rim_enabled = true
+		m.rim = 0.25
+		m.rim_tint = 0.6
+	if key in OUTLINED:
+		m.next_pass = outline()
 	_materials[key] = m
 	return m
+
+
+## Contorno oscuro "de cómic" (casco invertido): se dibuja la cara de atrás de
+## la malla un poco hinchada y en un color casi negro.
+static func outline() -> StandardMaterial3D:
+	if _outline:
+		return _outline
+	_outline = StandardMaterial3D.new()
+	_outline.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_outline.cull_mode = BaseMaterial3D.CULL_FRONT
+	_outline.grow = true
+	_outline.grow_amount = 0.025
+	_outline.albedo_color = Color(0.1, 0.06, 0.05)
+	return _outline
 
 
 static func _add_noise_normal(

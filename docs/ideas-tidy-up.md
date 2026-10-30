@@ -80,7 +80,7 @@ Consecuencias:
 | Kobolds contratados | Hormigas con casco |
 | Pala / saco / botas | Cuchara (de café a cucharón) / cubo (de tapón a tazón) / zapatillas de estar por casa |
 | Rueda de hámster / tobogán | El hámster de la familia / tobogán de pajita |
-| Resoplido del dragón | Papá ronca, murmura ("Mmm... cinco minutos más...") y da un manotazo |
+| Resoplido del dragón | Papá está encima (no se le ve): el cojín se hunde y respira. Murmura ("No estoy dormido... estoy descansando los ojos...") y, con el ruido al máximo, **mete la mano por la rendija** y persigue al más ruidoso. Se puede esquivar corriendo |
 | Cueva con antorchas | Hueco entre cojines: pelusas, focos de obra, un móvil perdido encendido y la luz de la tele parpadeando |
 
 ---

@@ -5,7 +5,7 @@ extends Node3D
 ## pantalla encendida, la luz que entra por la rendija y el parpadeo de la tele.
 ## Se genera por código para iterar rápido; luego se cambia por un modelo.
 
-const HEIGHT := 9.0
+const HEIGHT := Balance.CEILING_HEIGHT
 const WORK_LIGHTS := [
 	Vector3(-14.5, 0, -10), Vector3(-14.5, 0, 8), Vector3(14.5, 0, -11),
 	Vector3(14.5, 0, 10), Vector3(-9, 0, 12.5), Vector3(3, 0, 13),
@@ -31,6 +31,8 @@ func _ready() -> void:
 	_solid(Vector3(half_x * 2 + 2, HEIGHT, 1), Vector3(0, HEIGHT / 2, half_z + 0.5), "cushion")
 	_build_cushion_bulges(half_x, half_z)
 	_build_lint(half_x, half_z)
+	_build_seams(half_x, half_z)
+	_build_props()
 	_build_work_lights()
 	_build_lost_phone()
 	_build_light_gap()
@@ -108,6 +110,88 @@ func _build_lint(half_x: float, half_z: float) -> void:
 		var instance := Visuals.mesh_instance(self, lint, pos, "lint")
 		instance.scale = Vector3(1.0, rng.randf_range(0.6, 0.9), rng.randf_range(0.8, 1.3))
 		instance.rotation.y = rng.randf_range(0.0, TAU)
+
+
+## Costuras de la tapicería (franja oscura con puntadas de hilo).
+func _build_seams(half_x: float, half_z: float) -> void:
+	_seam(Vector3(-half_x, 0, 6.6), Vector3(half_x, 0, 6.6))
+	_seam(Vector3(-9.5, 0, -half_z), Vector3(-9.5, 0, 6.6))
+	_seam(Vector3(9.5, 0, -half_z), Vector3(9.5, 0, 6.6))
+
+
+func _seam(from: Vector3, to: Vector3) -> void:
+	var along := to - from
+	var length := along.length()
+	var yaw := atan2(along.x, along.z)
+	var strip := Visuals.mesh_instance(self, Visuals.box_mesh(Vector3(0.35, 0.02, length)), (from + to) / 2.0 + Vector3(0, 0.01, 0), "seam")
+	strip.rotation.y = yaw
+	var stitch := Visuals.box_mesh(Vector3(0.3, 0.03, 0.08))
+	var count := int(length / 0.7)
+	for i in count:
+		var pos := from + along * ((float(i) + 0.5) / float(count)) + Vector3(0, 0.02, 0)
+		var instance := Visuals.mesh_instance(self, stitch, pos, "thread")
+		instance.rotation.y = yaw + 0.5
+
+
+## Objetos a escala de becario: cuentan que somos diminutos.
+func _build_props() -> void:
+	# Una moneda de un euro enorme apoyada en el cojín.
+	var coin := Node3D.new()
+	coin.position = Vector3(-15.6, 1.35, -7.5)
+	coin.rotation_degrees = Vector3(0, 0, 75)
+	add_child(coin)
+	var ring := CylinderMesh.new()
+	ring.top_radius = 1.4
+	ring.bottom_radius = 1.4
+	ring.height = 0.2
+	ring.radial_segments = 40
+	Visuals.mesh_instance(coin, ring, Vector3.ZERO, "gold")
+	var center := CylinderMesh.new()
+	center.top_radius = 0.95
+	center.bottom_radius = 0.95
+	center.height = 0.22
+	center.radial_segments = 40
+	Visuals.mesh_instance(coin, center, Vector3.ZERO, "silver")
+	Visuals.static_box(self, Vector3(0.5, 2.6, 2.8), Vector3(-15.7, 1.3, -7.5), Visuals.LAYER_WORLD)
+
+	# Un palillo tirado.
+	var toothpick := Node3D.new()
+	toothpick.position = Vector3(10.5, 0.09, -3.5)
+	toothpick.rotation_degrees = Vector3(0, 35, 0)
+	add_child(toothpick)
+	var stick := CylinderMesh.new()
+	stick.top_radius = 0.09
+	stick.bottom_radius = 0.09
+	stick.height = 5.0
+	var stick_instance := Visuals.mesh_instance(toothpick, stick, Vector3.ZERO, "wood")
+	stick_instance.rotation_degrees = Vector3(0, 0, 90)
+	for side in [-1.0, 1.0]:
+		var tip := CylinderMesh.new()
+		tip.top_radius = 0.0
+		tip.bottom_radius = 0.09
+		tip.height = 0.45
+		var tip_instance := Visuals.mesh_instance(toothpick, tip, Vector3(2.72 * side, 0, 0), "wood")
+		tip_instance.rotation_degrees = Vector3(0, 0, -90.0 * side)
+
+	# Un pelo de papá, enorme y rizado, cruzando el suelo.
+	var points := []
+	for i in 9:
+		var t := float(i) / 8.0
+		var a := Vector3(-11.5, 0.04, 3.0)
+		var b := Vector3(-7.5, 0.04, 9.0)
+		var c := Vector3(-3.5, 0.04, 4.0)
+		points.append(a.lerp(b, t).lerp(b.lerp(c, t), t) + Vector3(0, 0, sin(t * 18.0) * 0.25))
+	for i in points.size() - 1:
+		var p0: Vector3 = points[i]
+		var p1: Vector3 = points[i + 1]
+		var segment := CylinderMesh.new()
+		segment.top_radius = 0.035
+		segment.bottom_radius = 0.035
+		segment.height = p0.distance_to(p1) + 0.05
+		segment.radial_segments = 6
+		var instance := Visuals.mesh_instance(self, segment, (p0 + p1) / 2.0, "hair")
+		var dir := p1 - p0
+		instance.rotation = Vector3(PI / 2.0, atan2(dir.x, dir.z), 0)
 
 
 ## Focos de obra que ha montado la empresa (trípode de palillos y lámpara).

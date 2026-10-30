@@ -42,7 +42,7 @@ Objetos perdidos (botones, bloques de juguete, pendientes, dados) ──[E coger
 Calderilla ──► tablón de MEJORAS (compartidas): cuchara, cubo, manivela, zapatillas, hormigas, hámster, tobogán de pajita
 ```
 
-**Ruido:** correr, saltar, vaciar el cubo o tirar objetos llena la barra de ruido de todo el grupo. Si llega al máximo, papá ronca fuerte, se revuelve y da un manotazo: **sale volando el becario que más ruido ha hecho** (no se pierde nada).
+**Ruido:** correr, saltar, vaciar el recipiente o tirar objetos llena la barra de ruido de todo el grupo. Papá está tumbado encima: el cojín de arriba se hunde con su peso y sube y baja al respirar. Con mucho ruido murmura y asoma los dedos por la rendija. Si la barra llega al máximo, **mete la mano por la rendija y va a por el becario que más ruido ha hecho**. Corriendo se puede esquivar (pero correr hace ruido). Si te pilla, sales volando (no se pierde nada). Correr unos 10 s seguidos, o menos si saltas, basta para despertarle a propósito.
 
 **Objetivo:** las 6.000 migas en sus cuencos y los 12 objetos en su sitio. Debajo de la montaña está **el mando de la tele**, que va apareciendo según la vacías.
 
@@ -55,7 +55,7 @@ Calderilla ──► tablón de MEJORAS (compartidas): cuchara, cubo, manivela, 
 | Añadir un objeto perdido | Duplica un nodo `Item` en `world.tscn`, dale un `item_id` nuevo y un `type_key` (`forma_color`, p. ej. `dice_red`), y añade su hueco en una bandeja (`slot_types`) |
 | Colores, materiales y formas provisionales | `scripts/visuals.gd` |
 | El escenario (cojines, pelusas, focos, luz de la tele) | `scripts/cave.gd` |
-| Papá (cabeza, mano, frases que murmura) | `scripts/sleeper.gd` |
+| Papá (cojín hundido, la mano que baja por la rendija, frases que murmura) | `scripts/sleeper.gd` y `Balance.DAD_MUMBLES` |
 | Textos de la interfaz | `scripts/hud.gd` y `scripts/menu.gd` |
 
 ## Cómo está hecho (resumen)

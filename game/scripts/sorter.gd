@@ -150,8 +150,10 @@ func get_prompt(_player: Node, part: String) -> String:
 	return ""
 
 
-func interact(_player: Node, part: String) -> void:
+func interact(player: Node, part: String) -> void:
 	if part == "hopper":
+		if Game.me().get("load_kind", "") == "mixed":
+			player.call("play_dump")
 		Game.request("_srv_dump")
 	elif part == "crank":
 		_try_crank()

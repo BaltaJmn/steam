@@ -84,5 +84,8 @@ func get_prompt(_player: Node, _part: String) -> String:
 	return "Cuenco de %s" % kind_name
 
 
-func interact(_player: Node, _part: String) -> void:
+func interact(player: Node, _part: String) -> void:
+	var data: Dictionary = Game.me()
+	if not data.is_empty() and data["load_kind"] == kind:
+		player.call("play_dump")
 	Game.request("_srv_deposit", [kind])

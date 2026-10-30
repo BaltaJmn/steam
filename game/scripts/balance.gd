@@ -12,6 +12,7 @@ const COMPANY_NAME := "MicroLimpiezas Menguantes S.L."
 # Tamaño jugable del hueco entre los cojines (mitad en X y en Z, en metros).
 const ROOM_HALF_X := 17.0
 const ROOM_HALF_Z := 14.0
+const CEILING_HEIGHT := 9.0  # el cojín de arriba, donde está sentado papá
 
 # --- Migas ---
 const KINDS := ["popcorn", "puff", "cookie"]
@@ -25,14 +26,30 @@ const SCOOP_COOLDOWN := 0.3
 const CRANK_INTERVAL := 0.2
 
 # --- Ruido ---
+# Calibrado para que despertar a papá a propósito cueste unos segundos (correr
+# y saltar) y que en grupo pase sin querer si nadie se controla.
 const NOISE_MAX := 100.0
-const NOISE_AFTER_SNORT := 35.0
-const NOISE_DECAY := 6.0  # por segundo
-const NOISE_SPRINT := 9.0  # por segundo corriendo
-const NOISE_LAND := 6.0  # al caer de un salto
-const NOISE_DUMP := 3.0  # al vaciar el cubo en la tolva
-const NOISE_CRANK := 0.35  # por cada vuelta de manivela
-const NOISE_DROP := 5.0  # al tirar un objeto al suelo
+const NOISE_AFTER_SNORT := 30.0
+const NOISE_DECAY := 4.0  # por segundo
+const NOISE_SPRINT := 14.0  # por segundo corriendo
+const NOISE_LAND := 7.0  # al caer de cualquier salto
+const NOISE_LAND_MIN_SPEED := 3.0  # velocidad de caída a partir de la que suena
+const NOISE_DUMP := 5.0  # al vaciar el cubo en la tolva
+const NOISE_CRANK := 0.6  # por cada vuelta de manivela
+const NOISE_DROP := 8.0  # al tirar un objeto al suelo
+
+# --- La mano de papá ---
+# Cuando el ruido llega al máximo, papá mete la mano por la rendija buscando el
+# mando y va a por el más ruidoso. Si corres, puedes esquivarla (pero correr
+# hace ruido...).
+const HAND_SPEED := 6.0  # m/s en horizontal (correr va a 7,5)
+const HAND_HIT_RADIUS := 2.3
+const DAD_MUMBLES := [
+	"Mmm... cinco minutos más...",
+	"No estoy dormido... estoy descansando los ojos...",
+	"¿Quién ha cambiado de canal...?",
+	"¿Dónde está el mando...?",
+]
 
 # --- Hormigas contratadas ---
 const WORKER_CAPACITY := 30

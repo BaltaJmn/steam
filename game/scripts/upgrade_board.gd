@@ -5,7 +5,12 @@ extends Node3D
 
 
 func _ready() -> void:
-	Visuals.mesh_instance(self, Visuals.box_mesh(Vector3(2.2, 1.4, 0.1)), Vector3(0, 1.6, 0), "wood")
+	Visuals.mesh_instance(self, Visuals.box_mesh(Vector3(2.2, 1.4, 0.1)), Vector3(0, 1.6, 0), "cork")
+	# Notas pegadas (decoración)
+	var notes := [[Vector3(-0.75, 1.15, 0.06), "note_yellow", 8.0], [Vector3(0.7, 1.12, 0.06), "note_pink", -6.0], [Vector3(0.85, 2.05, 0.06), "note_blue", 12.0]]
+	for note in notes:
+		var paper := Visuals.mesh_instance(self, Visuals.box_mesh(Vector3(0.32, 0.32, 0.01)), note[0], note[1])
+		paper.rotation_degrees = Vector3(0, 0, note[2])
 	for x in [-1.0, 1.0]:
 		Visuals.mesh_instance(self, Visuals.box_mesh(Vector3(0.1, 2.3, 0.1)), Vector3(x, 1.15, -0.05), "wood")
 	Visuals.static_box(

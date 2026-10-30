@@ -1,141 +1,241 @@
 @tool
 extends Node3D
-## Papá, dormido en el sofá (greybox). Solo asoman su cabezota, apoyada al fondo,
-## y una mano enorme. Ronca, murmura cuando hay mucho ruido y, si el ruido llega
-## al máximo, ronca fuerte, da un manotazo y manda volando al becario más ruidoso.
+## Papá. Está tumbado ENCIMA del sofá, así que desde aquí abajo no se le ve:
+## el cojín de arriba se hunde con su peso y sube y baja al respirar, y por la
+## rendija se cuela su ronquido. Con mucho ruido asoma los dedos por la rendija;
+## si el ruido llega al máximo, mete la mano buscando el mando y va a por el
+## becario más ruidoso. Corriendo se puede esquivar (aunque correr hace ruido).
+## Este nodo va colocado en el suelo, justo debajo de la rendija del techo.
 
-var _head: Node3D
+enum State { IDLE, PEEK, REACH, SLAM, RETRACT }
+
+const PEEK_WORRY := 0.7
+const DESCEND_SPEED := 10.0
+const SEARCH_TIME := 1.8  # tiempo que tarda en decidirse a dar el manotazo
+const SLAM_TIME := 0.22
+const RETRACT_TIME := 1.3
+const SEARCH_HEIGHT := 2.6
+const SLAM_HEIGHT := 0.5
+
+var _sag: MeshInstance3D
+var _shoulder: Node3D
+var _sleeve: MeshInstance3D
 var _hand: Node3D
+var _fingers: Array[Node3D] = []
 var _zzz: Label3D
-var _snore_puff: GPUParticles3D
+var _state := State.IDLE
+var _state_time := 0.0
+var _target_id := -1
+var _target_fallback := Vector3.ZERO
+var _slam_from := Vector3.ZERO
+var _retract_from := Vector3.ZERO
 var _time := 0.0
-var _snort_time := 0.0
+var _mumble := ""
+var _mumble_timer := 0.0
 
 
 func _ready() -> void:
 	_build()
 	if Engine.is_editor_hint():
+		# Vista previa en el editor: la mano buscando bajo la rendija.
+		_hand.global_position = global_position + Vector3(1.5, SEARCH_HEIGHT, 1.5)
+		_update_arm()
 		return
 	add_to_group("sleeper")
 	Game.game_event.connect(_on_game_event)
+	_hand.global_position = _hidden_point()
+	_update_arm()
 
 
 func _build() -> void:
-	_build_head()
-	_build_hand()
-	Visuals.static_box(self, Vector3(8.0, 6.5, 6.5), Vector3(0, 3.0, -1.0), Visuals.LAYER_WORLD)
-	_zzz = Visuals.label(self, "Zzz", Vector3(3.0, 6.8, 0.5), 120, Color(0.8, 0.85, 1.0))
+	var ceiling := Balance.CEILING_HEIGHT
+	# La rendija entre cojines por la que entra la luz del salón.
+	Visuals.mesh_instance(self, Visuals.box_mesh(Vector3(5.0, 0.05, 1.3)), Vector3(0, ceiling - 0.03, 0), "worklight")
 
-	_snore_puff = GPUParticles3D.new()
-	_snore_puff.position = Vector3(0, 1.5, 2.2)
-	_snore_puff.one_shot = true
-	_snore_puff.emitting = false
-	_snore_puff.amount = 40
-	_snore_puff.lifetime = 1.4
-	_snore_puff.explosiveness = 0.8
-	var puff_process := ParticleProcessMaterial.new()
-	puff_process.direction = Vector3(0, 0.2, 1)
-	puff_process.spread = 30.0
-	puff_process.initial_velocity_min = 5.0
-	puff_process.initial_velocity_max = 9.0
-	puff_process.gravity = Vector3(0, 0.5, 0)
-	puff_process.scale_min = 0.5
-	puff_process.scale_max = 1.4
-	_snore_puff.process_material = puff_process
-	var puff_mesh := SphereMesh.new()
-	puff_mesh.radius = 0.2
-	puff_mesh.height = 0.4
-	puff_mesh.material = Visuals.mat("snore")
-	_snore_puff.draw_pass_1 = puff_mesh
-	add_child(_snore_puff)
+	# El cojín de arriba hundido por el peso de papá.
+	var sag_mesh := SphereMesh.new()
+	sag_mesh.radius = 7.0
+	sag_mesh.height = 4.0
+	sag_mesh.radial_segments = 32
+	sag_mesh.rings = 16
+	_sag = Visuals.mesh_instance(self, sag_mesh, Vector3(7.5, ceiling + 1.0, 4.0), "cushion")
 
+	_zzz = Visuals.label(self, "Zzz", Vector3(0, ceiling - 1.2, 0.8), 120, Color(0.8, 0.85, 1.0))
 
-## Cabeza apoyada en el reposabrazos: calva con corona de pelo, bigote,
-## ojos cerrados y la boca abierta de roncar.
-func _build_head() -> void:
-	_head = Node3D.new()
-	_head.position = Vector3(0, 3.0, -1.0)
-	add_child(_head)
-	var skull := SphereMesh.new()
-	skull.radius = 3.2
-	skull.height = 6.0
-	Visuals.mesh_instance(_head, skull, Vector3.ZERO, "skin")
-	var hair_ring := TorusMesh.new()
-	hair_ring.inner_radius = 2.5
-	hair_ring.outer_radius = 3.4
-	var hair_instance := Visuals.mesh_instance(_head, hair_ring, Vector3(0, 0.9, -0.4), "hair")
-	hair_instance.rotation_degrees = Vector3(-15, 0, 0)
-	var nose := SphereMesh.new()
-	nose.radius = 0.85
-	nose.height = 1.5
-	Visuals.mesh_instance(_head, nose, Vector3(0, -0.2, 3.1), "skin")
-	var moustache := Visuals.mesh_instance(_head, Visuals.box_mesh(Vector3(2.6, 0.45, 0.7)), Vector3(0, -0.95, 2.85), "hair")
-	moustache.rotation_degrees = Vector3(-10, 0, 0)
-	var mouth := SphereMesh.new()
-	mouth.radius = 0.55
-	mouth.height = 0.7
-	var mouth_instance := Visuals.mesh_instance(_head, mouth, Vector3(0, -1.6, 2.55), "dark")
-	mouth_instance.scale = Vector3(1.3, 0.8, 0.5)
-	for side in [-1.0, 1.0]:
-		# Ojos cerrados y cejas
-		Visuals.mesh_instance(_head, Visuals.box_mesh(Vector3(0.9, 0.12, 0.12)), Vector3(1.1 * side, 0.7, 2.95), "dark")
-		Visuals.mesh_instance(_head, Visuals.box_mesh(Vector3(1.0, 0.25, 0.25)), Vector3(1.1 * side, 1.2, 2.85), "hair")
-		var ear := SphereMesh.new()
-		ear.radius = 0.7
-		ear.height = 1.6
-		Visuals.mesh_instance(_head, ear, Vector3(3.1 * side, 0.0, 0.0), "skin")
+	# Brazo (manga del pijama) y mano. Van en coordenadas globales.
+	_shoulder = Node3D.new()
+	_shoulder.top_level = true
+	add_child(_shoulder)
+	var sleeve_mesh := CylinderMesh.new()
+	sleeve_mesh.top_radius = 0.55
+	sleeve_mesh.bottom_radius = 0.6
+	sleeve_mesh.height = 1.0
+	sleeve_mesh.radial_segments = 16
+	_sleeve = Visuals.mesh_instance(_shoulder, sleeve_mesh, Vector3.ZERO, "sleeve")
+	_sleeve.rotation_degrees = Vector3(90, 0, 0)
 
-
-## Mano gigante apoyada en el cojín, junto a la cabeza.
-func _build_hand() -> void:
 	_hand = Node3D.new()
-	_hand.position = Vector3(6.0, 0.0, 1.5)
-	_hand.rotation_degrees = Vector3(0, -20, 0)
+	_hand.top_level = true
 	add_child(_hand)
-	Visuals.mesh_instance(_hand, Visuals.box_mesh(Vector3(2.2, 0.9, 2.4)), Vector3(0, 0.45, 0), "skin")
+	var palm := SphereMesh.new()
+	palm.radius = 0.95
+	palm.height = 0.7
+	var palm_instance := Visuals.mesh_instance(_hand, palm, Vector3.ZERO, "skin")
+	palm_instance.scale = Vector3(1.0, 1.0, 1.15)
+	var cuff := CylinderMesh.new()
+	cuff.top_radius = 0.62
+	cuff.bottom_radius = 0.62
+	cuff.height = 0.5
+	var cuff_instance := Visuals.mesh_instance(_hand, cuff, Vector3(0, 0.2, 1.0), "sleeve")
+	cuff_instance.rotation_degrees = Vector3(90, 0, 0)
 	for i in 4:
+		var knuckle := Node3D.new()
+		knuckle.position = Vector3(-0.6 + i * 0.4, 0.0, -0.85)
+		_hand.add_child(knuckle)
 		var finger := CapsuleMesh.new()
-		finger.radius = 0.28
-		finger.height = 1.8
-		var finger_instance := Visuals.mesh_instance(_hand, finger, Vector3(-0.8 + i * 0.53, 0.35, 1.9), "skin")
+		finger.radius = 0.19
+		finger.height = 1.25 - absf(i - 1.5) * 0.15
+		var finger_instance := Visuals.mesh_instance(knuckle, finger, Vector3(0, 0, -finger.height / 2.0 + 0.1), "skin")
 		finger_instance.rotation_degrees = Vector3(90, 0, 0)
+		_fingers.append(knuckle)
 	var thumb := CapsuleMesh.new()
-	thumb.radius = 0.3
-	thumb.height = 1.5
-	var thumb_instance := Visuals.mesh_instance(_hand, thumb, Vector3(-1.4, 0.35, 0.6), "skin")
-	thumb_instance.rotation_degrees = Vector3(90, -50, 0)
-	Visuals.static_box(_hand, Vector3(2.4, 0.9, 3.8), Vector3(0, 0.45, 0.8), Visuals.LAYER_WORLD)
+	thumb.radius = 0.21
+	thumb.height = 1.0
+	var thumb_instance := Visuals.mesh_instance(_hand, thumb, Vector3(-1.0, -0.05, -0.2), "skin")
+	thumb_instance.rotation_degrees = Vector3(90, -45, 0)
+
+
+func _hidden_point() -> Vector3:
+	return global_position + Vector3(0, Balance.CEILING_HEIGHT + 1.8, 0)
+
+
+func _peek_point() -> Vector3:
+	return global_position + Vector3(0, Balance.CEILING_HEIGHT - 0.2, 0)
 
 
 func _process(delta: float) -> void:
 	_time += delta
-	var breath := sin(_time * 1.1)
-	_head.scale = Vector3.ONE * (1.0 + breath * 0.015)
+	_sag.scale = Vector3(1.0, 1.0 + sin(_time * 1.0) * 0.06, 1.0)
 	if Engine.is_editor_hint():
 		return
 	var worry := clampf(Game.noise / Balance.NOISE_MAX, 0.0, 1.0)
-	if worry < 0.6:
-		_zzz.text = "Zzz"
-	elif worry < 0.85:
-		_zzz.text = "Mmm... cinco minutos más..."
-	else:
-		_zzz.text = "¡¿Quién ha cogido el mando?!"
-	_zzz.position.y = 6.8 + sin(_time * 0.8) * 0.2
+	_update_label(worry, delta)
+	_state_time += delta
+	match _state:
+		State.IDLE, State.PEEK:
+			_state = State.PEEK if worry >= PEEK_WORRY else State.IDLE
+			var goal := _peek_point() if _state == State.PEEK else _hidden_point()
+			_hand.global_position = _hand.global_position.lerp(goal, clampf(delta * 3.0, 0.0, 1.0))
+			_hand.rotation.y = lerp_angle(_hand.rotation.y, PI, clampf(delta * 3.0, 0.0, 1.0))
+			_wiggle_fingers(0.35 if _state == State.PEEK else 0.0)
+		State.REACH:
+			_reach(delta)
+			_wiggle_fingers(0.5)
+			if _state_time >= SEARCH_TIME:
+				_slam_from = _hand.global_position
+				_enter(State.SLAM)
+		State.SLAM:
+			var t := clampf(_state_time / SLAM_TIME, 0.0, 1.0)
+			_hand.global_position = _slam_from.lerp(Vector3(_slam_from.x, SLAM_HEIGHT, _slam_from.z), t * t)
+			_wiggle_fingers(0.0)
+			if t >= 1.0:
+				_resolve_slam()
+				_retract_from = _hand.global_position
+				_enter(State.RETRACT)
+		State.RETRACT:
+			var t := clampf(_state_time / RETRACT_TIME, 0.0, 1.0)
+			if _state_time > 0.35:
+				_hand.global_position = _retract_from.lerp(_hidden_point(), smoothstep(0.0, 1.0, t))
+			if t >= 1.0:
+				_enter(State.IDLE)
+	_update_arm()
+
+
+func _enter(state: State) -> void:
+	_state = state
+	_state_time = 0.0
+
+
+## Baja por la rendija y persigue al objetivo (más despacio de lo que corre un becario).
+func _reach(delta: float) -> void:
+	var target := _target_position()
+	var pos := _hand.global_position
+	var flat := Vector3(target.x - pos.x, 0.0, target.z - pos.z)
+	var dist := flat.length()
+	if dist > 0.05:
+		pos += flat / dist * minf(Balance.HAND_SPEED * delta, dist)
+		_hand.rotation.y = lerp_angle(_hand.rotation.y, atan2(-flat.x, -flat.z), clampf(delta * 6.0, 0.0, 1.0))
+	pos.y = move_toward(pos.y, SEARCH_HEIGHT, DESCEND_SPEED * delta)
+	_hand.global_position = pos
+
+
+func _target_position() -> Vector3:
+	var node = Game.player_nodes.get(_target_id)
+	if is_instance_valid(node):
+		return node.global_position
+	return _target_fallback
+
+
+## El manotazo. Cada jugador comprueba si le ha dado a él (así lo que ve es
+## justo lo que pasa en su pantalla).
+func _resolve_slam() -> void:
+	var me = Game.player_nodes.get(multiplayer.get_unique_id())
+	if not is_instance_valid(me):
+		return
+	var to_me: Vector3 = me.global_position - _hand.global_position
+	var flat_dist := Vector2(to_me.x, to_me.z).length()
+	if flat_dist < 8.0:
+		me.add_shake(clampf(1.0 - flat_dist / 8.0, 0.0, 1.0) * 0.35)
+	if _target_id != multiplayer.get_unique_id():
+		return
+	var hud = get_tree().get_first_node_in_group("hud")
+	if flat_dist <= Balance.HAND_HIT_RADIUS:
+		me.knockback(_hand.global_position)
+		if hud:
+			hud.toast("¡MANOTAZO!", Color(1.0, 0.5, 0.35))
+	elif hud:
+		hud.toast("¡Te has librado por los pelos!", Color(0.6, 1.0, 0.6))
+
+
+func _wiggle_fingers(amount: float) -> void:
+	for i in _fingers.size():
+		_fingers[i].rotation.x = sin(_time * 9.0 + float(i) * 0.8) * amount
+
+
+## Coloca la manga entre la rendija y la muñeca.
+func _update_arm() -> void:
+	var shoulder_pos := global_position + Vector3(0, Balance.CEILING_HEIGHT + 2.0, 0)
+	var wrist := _hand.global_position + _hand.global_transform.basis.z * 1.1 + Vector3(0, 0.2, 0)
+	var to_wrist := wrist - shoulder_pos
+	var length := to_wrist.length()
+	_shoulder.visible = _hand.global_position.y < Balance.CEILING_HEIGHT + 0.5
+	if length < 0.1:
+		return
+	_shoulder.global_transform = Transform3D(Basis.looking_at(to_wrist, Vector3.FORWARD), shoulder_pos)
+	_sleeve.scale = Vector3(1.0, length, 1.0)
+	_sleeve.position = Vector3(0, 0, -length / 2.0)
+
+
+func _update_label(worry: float, delta: float) -> void:
+	_zzz.position.y = Balance.CEILING_HEIGHT - 1.2 + sin(_time * 0.8) * 0.2
 	_zzz.modulate = Color(0.8, 0.85, 1.0).lerp(Color(1.0, 0.4, 0.3), worry)
-	_head.rotation.z = sin(_time * 19.0) * 0.06 * maxf(0.0, worry - 0.6)
-	_hand.position.y = 0.0
-	if _snort_time > 0.0:
-		_snort_time = maxf(0.0, _snort_time - delta)
-		# Manotazo: la mano sube y vuelve a caer de golpe.
-		_hand.position.y = sin(_snort_time * PI) * 2.5
+	if _state == State.REACH or _state == State.SLAM:
+		_zzz.text = "¡¿Quién anda ahí?!"
+		return
+	if worry < 0.6:
+		_zzz.text = "Zzz" if fmod(_time, 4.0) < 3.0 else "ZZZZ..."
+		_mumble = ""
+		return
+	_mumble_timer -= delta
+	if _mumble == "" or _mumble_timer <= 0.0:
+		_mumble = Balance.DAD_MUMBLES[randi() % Balance.DAD_MUMBLES.size()]
+		_mumble_timer = 3.5
+	_zzz.text = _mumble
 
 
 func _on_game_event(ev_name: String, data: Dictionary) -> void:
 	if ev_name != "snort":
 		return
-	_snort_time = 1.0
-	_snore_puff.restart()
-	var target := int(data.get("target", -1))
-	var node = Game.player_nodes.get(target)
-	if target == multiplayer.get_unique_id() and is_instance_valid(node):
-		node.knockback(_head.global_position)
+	_target_id = int(data.get("target", -1))
+	_target_fallback = data.get("pos", global_position)
+	_enter(State.REACH)
