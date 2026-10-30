@@ -1,6 +1,6 @@
 # Concepto de juego: propuesta inicial
 
-> **Estado:** borrador para discutir.
+> **Estado:** aparcado. Es demasiado grande para un primer juego "súper simple". La dirección actual está en [`ideas-tidy-up.md`](ideas-tidy-up.md).
 > **Nombre provisional:** *Pull the Plug* (alternativas: *Bail Out!*, *Low Tide Co.*, *Achicadores*).
 > **Referente principal:** Moon Sweepers (DragDrop Games, octubre de 2026).
 

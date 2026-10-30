@@ -1,5 +1,6 @@
-# Pull the Plug (nombre provisional)
+# Juego para Steam (sin nombre todavía)
 
-Juego coop incremental y de automatización para Steam: vaciar el océano de un planeta empezando con un cubo de playa, hasta llegar al tapón que hay en el fondo.
+Juego coop, simple e incremental para Steam, en el estilo "Tidy Up" (Librarian, Brick by Brick, Moon Sweepers).
 
-- 📄 [Concepto inicial y propuesta de diseño](docs/concepto-inicial.md)
+- 📄 [**Ideas "Tidy Up"**: dirección actual (juegos súper simples, coop y coste mínimo)](docs/ideas-tidy-up.md)
+- 📄 [Concepto inicial: *Pull the Plug*, vaciar un océano (aparcado por tamaño)](docs/concepto-inicial.md)
