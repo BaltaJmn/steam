@@ -1,8 +1,9 @@
 @tool
 extends Node3D
-## Clasificadora: tolva arriba (entran monedas mezcladas), manivela al lado y
-## tres cubetas delante (salen separadas en cobre, plata y oro).
-## Con las mejoras aparecen la rueda de hámster y el tobogán a la cámara.
+## Clasificadora (hecha con palitos de helado y un clip): tolva arriba (entran
+## migas mezcladas), manivela al lado y tres cubetas delante (salen separadas en
+## palomitas, ganchitos y galleta). Con las mejoras aparecen la rueda del hámster
+## y el tobogán de pajita hacia los cuencos.
 
 var _crank_pivot: Node3D
 var _wheel: Node3D
@@ -73,7 +74,7 @@ func _build() -> void:
 		_bin_labels[kind] = Visuals.label(self, "", Vector3(x, 0.85, 1.05), 36)
 		i += 1
 
-	# Rueda de hámster (mejora "wheel")
+	# Rueda del hámster de la familia (mejora "wheel")
 	_wheel = Node3D.new()
 	_wheel.position = Vector3(-1.25, 0.8, 0)
 	add_child(_wheel)
@@ -84,7 +85,7 @@ func _build() -> void:
 	ring_instance.rotation_degrees = Vector3(0, 0, 90)
 	_wheel.visible = false
 
-	# Tobogán hacia la cámara acorazada (mejora "chute")
+	# Tobogán de pajita hacia los cuencos (mejora "chute")
 	_chute = Node3D.new()
 	add_child(_chute)
 	var ramp := Visuals.mesh_instance(_chute, Visuals.box_mesh(Vector3(1.8, 0.08, 5.0)), Vector3(0, 0.25, 3.9), "metal")
@@ -102,7 +103,7 @@ func _process(delta: float) -> void:
 	if _spin > 0.0:
 		_crank_pivot.rotation.x += delta * 12.0 * _spin
 		_spin = maxf(0.0, _spin - delta * 2.5)
-	if _wheel.visible and Game.coin_sum(Game.hopper) > 0:
+	if _wheel.visible and Game.crumb_sum(Game.hopper) > 0:
 		_wheel.rotation.x += delta * 3.0
 
 
@@ -112,7 +113,7 @@ func _on_changed(what: String, _id: int) -> void:
 
 
 func _refresh() -> void:
-	var total: int = Game.coin_sum(Game.hopper)
+	var total: int = Game.crumb_sum(Game.hopper)
 	if _last_hopper >= 0 and total < _last_hopper:
 		_spin = 1.0
 	_last_hopper = total
@@ -131,10 +132,10 @@ func get_prompt(_player: Node, part: String) -> String:
 	var load_kind: String = data["load_kind"]
 	if part == "hopper":
 		if load_kind == "mixed":
-			return "[E] Vaciar %d monedas en la tolva" % Game.load_total(data)
-		return "Tolva: %d monedas por clasificar" % Game.coin_sum(Game.hopper)
+			return "[E] Vaciar %d migas en la tolva" % Game.load_total(data)
+		return "Tolva: %d migas por clasificar" % Game.crumb_sum(Game.hopper)
 	if part == "crank":
-		if Game.coin_sum(Game.hopper) == 0:
+		if Game.crumb_sum(Game.hopper) == 0:
 			return "Manivela (la tolva está vacía)"
 		return "Mantén [E] para girar la manivela"
 	if part.begins_with("bin_"):
@@ -145,7 +146,7 @@ func get_prompt(_player: Node, part: String) -> String:
 			return "Cubeta de %s (vacía)" % kind_name
 		if int(data["item"]) != -1 or (load_kind != "" and load_kind != kind):
 			return "Cubeta de %s: %d (tienes las manos ocupadas)" % [kind_name, amount]
-		return "[E] Coger bolsa de %s (%d)" % [kind_name, amount]
+		return "[E] Llenar el cubo de %s (%d)" % [kind_name, amount]
 	return ""
 
 

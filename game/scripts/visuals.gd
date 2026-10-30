@@ -9,8 +9,9 @@ const LAYER_WORLD := 1
 const LAYER_INTERACT := 2
 const LAYER_PLAYERS := 4
 
-const GEM_COLORS := {
-	"red": Color(0.95, 0.15, 0.2), "blue": Color(0.2, 0.45, 1.0), "green": Color(0.2, 0.9, 0.4),
+const PLASTIC_COLORS := {
+	"red": Color(0.9, 0.12, 0.12), "blue": Color(0.15, 0.4, 0.95),
+	"yellow": Color(1.0, 0.82, 0.1), "white": Color(0.95, 0.95, 0.92),
 }
 
 static var _materials := {}
@@ -21,14 +22,27 @@ static func mat(key: String) -> StandardMaterial3D:
 		return _materials[key]
 	var m := StandardMaterial3D.new()
 	match key:
-		"coins":
-			m.albedo_color = Color(1.0, 0.74, 0.28)
-			m.metallic = 1.0
-			m.roughness = 0.3
-			m.emission_enabled = true
-			m.emission = Color(1.0, 0.55, 0.15)
-			m.emission_energy_multiplier = 0.15
+		# Migas
+		"crumbs":
+			m.albedo_color = Color(0.88, 0.68, 0.4)
+			m.roughness = 0.9
 			_add_noise_normal(m, FastNoiseLite.TYPE_CELLULAR, 0.09, 5.0)
+		"popcorn":
+			m.albedo_color = Color(0.98, 0.94, 0.8)
+			m.roughness = 0.85
+			_add_noise_normal(m, FastNoiseLite.TYPE_CELLULAR, 0.12, 3.0)
+		"puff":
+			m.albedo_color = Color(1.0, 0.55, 0.12)
+			m.roughness = 0.8
+			_add_noise_normal(m, FastNoiseLite.TYPE_CELLULAR, 0.12, 3.0)
+		"cookie":
+			m.albedo_color = Color(0.58, 0.35, 0.17)
+			m.roughness = 0.9
+			_add_noise_normal(m, FastNoiseLite.TYPE_CELLULAR, 0.12, 3.0)
+		# Objetos perdidos (plástico y metal)
+		"red", "blue", "yellow", "white":
+			m.albedo_color = PLASTIC_COLORS[key]
+			m.roughness = 0.3
 		"gold":
 			m.albedo_color = Color(1.0, 0.78, 0.3)
 			m.metallic = 1.0
@@ -37,74 +51,67 @@ static func mat(key: String) -> StandardMaterial3D:
 			m.albedo_color = Color(0.85, 0.87, 0.92)
 			m.metallic = 1.0
 			m.roughness = 0.2
-		"copper":
-			m.albedo_color = Color(0.85, 0.48, 0.28)
-			m.metallic = 1.0
-			m.roughness = 0.3
-		"red", "blue", "green":
-			m.albedo_color = GEM_COLORS[key]
-			m.metallic = 0.2
-			m.roughness = 0.05
-			m.emission_enabled = true
-			m.emission = GEM_COLORS[key]
-			m.emission_energy_multiplier = 0.6
 		"ghost":
 			m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 			m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 			m.albedo_color = Color(0.7, 0.85, 1.0, 0.22)
-		"rock":
-			m.albedo_color = Color(0.22, 0.18, 0.16)
-			m.roughness = 0.95
-			_add_noise_normal(m, FastNoiseLite.TYPE_SIMPLEX, 0.02, 3.0)
-		"floor":
-			m.albedo_color = Color(0.28, 0.22, 0.17)
-			m.roughness = 0.9
-			_add_noise_normal(m, FastNoiseLite.TYPE_SIMPLEX, 0.03, 12.0)
+		"remote":
+			m.albedo_color = Color(0.06, 0.06, 0.07)
+			m.roughness = 0.4
+		# El sofá
+		"fabric":
+			m.albedo_color = Color(0.45, 0.27, 0.18)
+			m.roughness = 1.0
+			_add_noise_normal(m, FastNoiseLite.TYPE_SIMPLEX, 0.05, 10.0)
+		"cushion":
+			m.albedo_color = Color(0.55, 0.33, 0.21)
+			m.roughness = 1.0
+			_add_noise_normal(m, FastNoiseLite.TYPE_SIMPLEX, 0.05, 6.0)
+		"lint":
+			m.albedo_color = Color(0.62, 0.62, 0.66)
+			m.roughness = 1.0
+			_add_noise_normal(m, FastNoiseLite.TYPE_CELLULAR, 0.2, 2.0)
+		"screen":
+			m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			m.albedo_color = Color(0.5, 0.75, 1.0)
+			m.emission_enabled = true
+			m.emission = Color(0.4, 0.7, 1.0)
+			m.emission_energy_multiplier = 2.5
+		"worklight":
+			m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			m.albedo_color = Color(1.0, 0.9, 0.6)
+			m.emission_enabled = true
+			m.emission = Color(1.0, 0.85, 0.5)
+			m.emission_energy_multiplier = 4.0
+		# Materiales de la cuadrilla (palitos de helado, clips...)
 		"wood":
-			m.albedo_color = Color(0.45, 0.28, 0.16)
+			m.albedo_color = Color(0.85, 0.7, 0.45)
 			m.roughness = 0.8
 		"metal":
-			m.albedo_color = Color(0.4, 0.4, 0.43)
-			m.metallic = 0.8
-			m.roughness = 0.45
-		"dragon":
-			m.albedo_color = Color(0.55, 0.12, 0.1)
-			m.metallic = 0.3
-			m.roughness = 0.5
-			_add_noise_normal(m, FastNoiseLite.TYPE_CELLULAR, 0.12, 4.0)
-		"dragon_wing":
-			m.albedo_color = Color(0.35, 0.08, 0.08)
+			m.albedo_color = Color(0.7, 0.72, 0.75)
+			m.metallic = 0.9
+			m.roughness = 0.35
+		"bowl":
+			m.albedo_color = Color(0.3, 0.6, 0.9)
+			m.roughness = 0.3
+		# Papá, las hormigas y la cuadrilla
+		"skin":
+			m.albedo_color = Color(0.95, 0.74, 0.6)
 			m.roughness = 0.7
-			m.cull_mode = BaseMaterial3D.CULL_DISABLED
-		"bone":
-			m.albedo_color = Color(0.9, 0.85, 0.72)
-			m.roughness = 0.6
+		"hair":
+			m.albedo_color = Color(0.22, 0.14, 0.09)
+			m.roughness = 0.9
 		"dark":
 			m.albedo_color = Color(0.05, 0.04, 0.04)
-		"kobold":
-			m.albedo_color = Color(0.55, 0.42, 0.25)
-			m.roughness = 0.8
+		"ant":
+			m.albedo_color = Color(0.1, 0.06, 0.05)
+			m.roughness = 0.25
 		"helmet":
 			m.albedo_color = Color(1.0, 0.8, 0.1)
 			m.roughness = 0.4
-		"flame":
+		"snore":
 			m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-			m.albedo_color = Color(1.0, 0.6, 0.2)
-			m.emission_enabled = true
-			m.emission = Color(1.0, 0.5, 0.15)
-			m.emission_energy_multiplier = 4.0
-		"crystal":
-			m.albedo_color = Color(0.3, 0.8, 1.0)
-			m.roughness = 0.1
-			m.emission_enabled = true
-			m.emission = Color(0.2, 0.7, 1.0)
-			m.emission_energy_multiplier = 1.5
-		"smoke":
-			m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-			m.albedo_color = Color(1.0, 0.55, 0.2)
-			m.emission_enabled = true
-			m.emission = Color(1.0, 0.45, 0.1)
-			m.emission_energy_multiplier = 3.0
+			m.albedo_color = Color(0.92, 0.95, 1.0)
 		_:
 			m.albedo_color = Color.MAGENTA
 	_materials[key] = m
@@ -127,49 +134,43 @@ static func _add_noise_normal(
 	m.uv1_scale = Vector3(uv_scale, uv_scale, uv_scale)
 
 
-# --- Tesoros ---
+# --- Objetos perdidos ---
 
 static func item_mesh(type_key: String) -> Mesh:
 	var parts := type_key.split("_")
-	var material_key: String = parts[1] if parts.size() > 1 else "gold"
+	var material_key: String = parts[1] if parts.size() > 1 else "red"
 	var mesh: PrimitiveMesh
 	match parts[0]:
-		"crown":
-			var torus := TorusMesh.new()
-			torus.inner_radius = 0.13
-			torus.outer_radius = 0.2
-			mesh = torus
-		"chalice":
-			var cup := CylinderMesh.new()
-			cup.top_radius = 0.13
-			cup.bottom_radius = 0.05
-			cup.height = 0.3
-			mesh = cup
-		"sword":
-			var blade := BoxMesh.new()
-			blade.size = Vector3(0.07, 0.8, 0.025)
-			mesh = blade
+		"button":
+			var disc := CylinderMesh.new()
+			disc.top_radius = 0.2
+			disc.bottom_radius = 0.2
+			disc.height = 0.06
+			disc.radial_segments = 16
+			mesh = disc
+		"block":
+			mesh = box_mesh(Vector3(0.32, 0.19, 0.16))
+		"earring":
+			var ring := TorusMesh.new()
+			ring.inner_radius = 0.1
+			ring.outer_radius = 0.15
+			mesh = ring
 		_:
-			var gem := SphereMesh.new()
-			gem.radius = 0.11
-			gem.height = 0.2
-			gem.radial_segments = 6
-			gem.rings = 2
-			mesh = gem
+			mesh = box_mesh(Vector3(0.24, 0.24, 0.24))
 	mesh.material = mat(material_key)
 	return mesh
 
 
-## Altura del tesoro de pie, para apoyarlo bien en el suelo o en el estante.
+## Altura del objeto apoyado, para dejarlo bien en el suelo o en la bandeja.
 static func item_height(type_key: String) -> float:
 	match type_key.split("_")[0]:
-		"crown":
-			return 0.07
-		"chalice":
-			return 0.3
-		"sword":
-			return 0.8
-	return 0.2
+		"button":
+			return 0.06
+		"block":
+			return 0.19
+		"earring":
+			return 0.05
+	return 0.24
 
 
 # --- Piezas genéricas ---

@@ -1,5 +1,5 @@
 extends CharacterBody3D
-## Kobold jugador. El local se mueve con teclado y ratón; los remotos solo
+## Becario de MicroLimpiezas (jugador). El local se mueve con teclado y ratón; los remotos solo
 ## siguen la posición que les llega por red.
 
 const WALK_SPEED := 4.5
@@ -11,7 +11,7 @@ const NOISE_SEND_INTERVAL := 0.5
 
 var peer_id := 1
 var is_local := false
-var display_name := "Kobold"
+var display_name := "Becario"
 var color := Color.WHITE
 
 var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
@@ -56,27 +56,33 @@ func _build_body() -> void:
 	var body := Node3D.new()
 	body.name = "Body"
 	add_child(body)
-	var skin := StandardMaterial3D.new()
-	skin.albedo_color = color
-	skin.roughness = 0.8
+	# Mono de trabajo del color del jugador, cabeza y gorra de la empresa.
+	var overalls := StandardMaterial3D.new()
+	overalls.albedo_color = color
+	overalls.roughness = 0.8
 	var torso := CapsuleMesh.new()
-	torso.radius = 0.32
-	torso.height = 1.3
-	torso.material = skin
-	Visuals.mesh_instance(body, torso, Vector3(0, 0.65, 0))
-	var snout := Visuals.box_mesh(Vector3(0.22, 0.16, 0.3))
-	snout.material = skin
-	Visuals.mesh_instance(body, snout, Vector3(0, 1.05, -0.32))
+	torso.radius = 0.3
+	torso.height = 1.05
+	torso.material = overalls
+	Visuals.mesh_instance(body, torso, Vector3(0, 0.55, 0))
+	var head_mesh := SphereMesh.new()
+	head_mesh.radius = 0.22
+	head_mesh.height = 0.44
+	Visuals.mesh_instance(body, head_mesh, Vector3(0, 1.25, 0), "skin")
+	var cap := CylinderMesh.new()
+	cap.top_radius = 0.2
+	cap.bottom_radius = 0.23
+	cap.height = 0.12
+	cap.material = overalls
+	Visuals.mesh_instance(body, cap, Vector3(0, 1.42, 0))
+	var visor := Visuals.box_mesh(Vector3(0.3, 0.03, 0.18))
+	visor.material = overalls
+	Visuals.mesh_instance(body, visor, Vector3(0, 1.38, -0.26))
 	for side in [-1.0, 1.0]:
 		var eye := SphereMesh.new()
-		eye.radius = 0.05
-		eye.height = 0.1
-		Visuals.mesh_instance(body, eye, Vector3(0.1 * side, 1.16, -0.27), "dark")
-		var horn := CylinderMesh.new()
-		horn.top_radius = 0.0
-		horn.bottom_radius = 0.05
-		horn.height = 0.2
-		Visuals.mesh_instance(body, horn, Vector3(0.13 * side, 1.38, -0.05), "bone")
+		eye.radius = 0.035
+		eye.height = 0.07
+		Visuals.mesh_instance(body, eye, Vector3(0.08 * side, 1.29, -0.2), "dark")
 	var name_label := Visuals.label(self, display_name, Vector3(0, 1.75, 0), 40, color.lightened(0.3))
 	# El jugador local no se ve a sí mismo (cámara en primera persona).
 	body.visible = not is_local
@@ -123,7 +129,7 @@ func _physics_process(delta: float) -> void:
 	var sprinting := controls and Input.is_action_pressed("sprint") and input.length() > 0.1
 	var speed := (SPRINT_SPEED if sprinting else WALK_SPEED) * _load_slowdown()
 	var direction := (transform.basis * Vector3(input.x, 0.0, input.y)).normalized()
-	# Tras un resoplido del dragón casi no hay control durante un momento.
+	# Tras un manotazo de papá casi no hay control durante un momento.
 	var control := 1.0 if _knock_timer <= 0.0 else 0.05
 	velocity.x = lerpf(velocity.x, direction.x * speed, control)
 	velocity.z = lerpf(velocity.z, direction.z * speed, control)
@@ -219,8 +225,8 @@ func _drop() -> void:
 		Game.request("_srv_return_load")
 
 
-## Suelta el tesoro a tus pies (dentro de tu propio hueco, así nunca queda
-## metido dentro de una torre o una máquina) y sobre lo que haya debajo.
+## Suelta el objeto a tus pies (dentro de tu propio hueco, así nunca queda
+## metido dentro de un cuenco o una máquina) y sobre lo que haya debajo.
 func _drop_position() -> Vector3:
 	var origin := global_position - global_transform.basis.z * 0.3 + Vector3.UP * 0.5
 	var query := PhysicsRayQueryParameters3D.create(origin, origin + Vector3.DOWN * 3.0, Visuals.LAYER_WORLD)
@@ -239,7 +245,7 @@ func _update_sack() -> void:
 	var fraction := clampf(float(amount) / maxf(1.0, float(Game.capacity())), 0.0, 1.0)
 	_sack.scale = Vector3.ONE * (0.6 + 0.8 * fraction)
 	var kind: String = data["load_kind"]
-	_sack.material_override = Visuals.mat("coins" if kind == "mixed" else kind)
+	_sack.material_override = Visuals.mat("crumbs" if kind == "mixed" else kind)
 
 
 func set_remote_transform(pos: Vector3, yaw: float, pitch: float) -> void:
@@ -252,7 +258,7 @@ func get_hold_transform() -> Transform3D:
 	return hold_point.global_transform
 
 
-## Lo llama el dragón al resoplar si este jugador ha sido el más ruidoso.
+## Lo llama papá al dar un manotazo si este jugador ha sido el más ruidoso.
 func knockback(from: Vector3) -> void:
 	var away := global_position - from
 	away.y = 0.0

@@ -1,8 +1,8 @@
-# Kobold Keepers (nombre provisional)
+# Couch Crew (nombre provisional)
 
-> Ordena el tesoro. No despiertes al dragón.
+> Encontrad el mando. No despertéis a papá.
 
-Juego coop (1–4), simple e incremental para Steam, en el estilo "tidy up" (Librarian, Brick by Brick, Moon Sweepers): sois kobolds que ordenan la montaña de oro de un dragón dormido, con mejoras, máquinas y kobolds contratados, y sin hacer ruido.
+Juego coop (1–4), simple e incremental para Steam, en el estilo "tidy up" (Librarian, Brick by Brick, Moon Sweepers). Sois becarios de una empresa de limpieza que encoge a sus empleados para limpiar entre los cojines del sofá donde papá lleva 20 años echándose la siesta. Recogéis migas con máquinas y hormigas contratadas, devolvéis objetos perdidos y buscáis el mando de la tele sin hacer ruido.
 
 - 🎮 [**Prototipo jugable (Godot 4.7)**](game/README.md): cómo abrirlo, probar el coop y qué tocar
 - 📄 [**Diseño**: dirección actual y decisiones tomadas](docs/ideas-tidy-up.md)

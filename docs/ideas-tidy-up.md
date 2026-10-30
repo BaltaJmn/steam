@@ -1,6 +1,6 @@
 # Ideas "Tidy Up": juegos súper simples, con coop y casi sin coste
 
-> **Estado:** dirección elegida (el dragón). Las decisiones tomadas están en la [sección 0](#0-decisiones-tomadas) y el prototipo jugable en [`/game`](../game/README.md). Sustituye en alcance a [`concepto-inicial.md`](concepto-inicial.md), que se queda aparcado.
+> **Estado:** dirección elegida: **el sofá de papá** ([sección 0.3](#03-nueva-temática-el-sofá-de-papá-elegida)). Las mecánicas son las de la sección 4. El prototipo jugable está en [`/game`](../game/README.md). Sustituye en alcance a [`concepto-inicial.md`](concepto-inicial.md), que se queda aparcado.
 > **Objetivo:** un juego muy simple, con un coop divertido y un coste de desarrollo mínimo.
 
 ---
@@ -9,11 +9,11 @@
 
 | Tema | Decisión | Por qué |
 |---|---|---|
-| Idea | Mecánicas de la sección 4, **con otra temática** (en elección, [sección 0.3](#03-nueva-temática-en-elección)) | El dragón choca con *Folded Fables*. Se busca un origen absurdo y gracioso |
+| Idea | **El sofá de papá** (sección 0.3), con las mecánicas de la sección 4 | El dragón chocaba con *Folded Fables*. El sofá tiene un origen absurdo y gracioso, es universal y no hay nada igual en Steam |
 | Equipo | 1 persona | — |
 | Motor | **Godot 4.7** (Forward+) | Ver abajo |
 | Progreso offline | **No.** El juego no avanza con el juego cerrado | Los ayudantes son gente contratada que trabaja contigo mientras juegas y acelera el ritmo |
-| Nombre (provisional) | ***Kobold Keepers***, sin la coletilla *"Tidy Up the …!"* | Ver [sección 0.2](#02-nombre-y-competencia-directa) |
+| Nombre (provisional) | ***Couch Crew***. Lema: *"Encontrad el mando. No despertéis a papá."* | Sin la coletilla *"Tidy Up the …!"*, ver 0.2. No usar "Don't Wake Dad" (ya es un juego de mesa) |
 
 ### 0.1 Por qué Godot y no Unity
 
@@ -45,7 +45,7 @@ Consecuencias:
 
    *Actualización:* se descarta el dragón. Además existe *Goblin Cleanup* (goblins limpiando mazmorras en coop), así que también conviene dejar los kobolds. Ver 0.3.
 
-### 0.3 Nueva temática (en elección)
+### 0.3 Nueva temática: el sofá de papá (elegida)
 
 **Lo que se pide:** un origen absurdo, llamativo y que haga gracia. **Lo que se mantiene:** todas las mecánicas del prototipo:
 - montaña de cosas mezcladas → máquina que clasifica → tres montones;
@@ -55,17 +55,33 @@ Consecuencias:
 
 | | Temática | Origen (la gracia) | Cómo encajan las mecánicas | Riesgo |
 |---|---|---|---|---|
-| ⭐ | **El sofá de papá** (*Couch Crew*) | Papá lleva 20 años echándose la siesta en el mismo sofá y entre los cojines ya hay un ecosistema. La familia contrata a **MicroLimpiezas Menguantes S.L.**, que encoge a sus empleados con un rayo. Encargo: **recuperar el mando de la tele** | Migas mezcladas (palomitas, ganchitos, galleta) → clasificadora → tres cuencos. Las monedas sueltas son la paga. Objetos perdidos: mandos de todo tipo, gafas, llaves, LEGO, un chupete... Si hacéis ruido, papá se da la vuelta y el terremoto de cojín lanza al más ruidoso. Ayudantes: **hormigas con casco**. Automatización: una roomba en miniatura y una cinta hecha con una regla | No he encontrado nada igual en Steam. Ojo: "Don't Wake Dad" es un juego de mesa, así que no usar ese nombre |
+| ⭐ | **El sofá de papá** (*Couch Crew*) | Papá lleva 20 años echándose la siesta en el mismo sofá y entre los cojines ya hay un ecosistema. La familia contrata a **MicroLimpiezas Menguantes S.L.**, que encoge a sus empleados con un rayo. Encargo: **recuperar el mando de la tele** | Migas mezcladas (palomitas, ganchitos, galleta) → clasificadora → tres cuencos. Las monedas sueltas son la paga. Objetos perdidos: mandos de todo tipo, gafas, llaves, bloques de juguete, un chupete... Si hacéis ruido, papá se da la vuelta y el terremoto de cojín lanza al más ruidoso. Ayudantes: **hormigas con casco**. Automatización: una aspiradora robot en miniatura y una cinta hecha con una regla | No he encontrado nada igual en Steam. Ojo: "Don't Wake Dad" es un juego de mesa, así que no usar ese nombre |
 | | **El bolso sin fondo de la abuela** | El bolso es más grande por dentro y la abuela lleva perdiendo cosas ahí desde 1974. Busca sus gafas... **que llevaba en la cabeza** (gag final) | Caramelos de 3 colores → tarros. Objetos: monedero, pintalabios, dentadura, recetas... Si hacéis ruido, la abuela mete la mano a rebuscar | Existe *Tidy Backpack* (puzle de mochila, distinto) |
 | | **La ballena con indigestión** | Lleva 300 años tragándose barcos y le duele la tripa | Chatarra/monedas/sardinas. Objetos: anclas, timones, un piano, un pescador dormido. Si hacéis ruido, **eructo** | Varios juegos de ballenas recientes (*Whale Cleaner*, *BLOWHOLE*). Puede resultar asqueroso para el público cozy |
 | | **La barba del vikingo** | El vikingo más peludo del mundo lleva 40 años sin peinarse | Migas de pan, queso y galleta. Objetos: cucharas, un casco, una familia de ardillas. Si hacéis ruido, se rasca | El pelo es caro de modelar bien |
 
-**Recomendación: el sofá de papá.**
+**Elegida: el sofá de papá.**
 - Es universal: todo el mundo ha perdido algo en el sofá y conoce a alguien que se duerme viendo la tele.
 - El objetivo final ya es un chiste: encontrar el mando.
 - La miniatura se entiende sola: un papá gigante roncando y obreros diminutos entre los cojines.
 - El escenario es baratísimo: los cojines son cajas redondeadas con textura de tela y la luz entra por las rendijas.
 - **Final:** encontráis el mando, papá se despierta, lo coge sin mirar, pone el fútbol y vuelve a dormirse.
+
+**Cómo ha quedado en el prototipo:**
+
+| Antes (dragón) | Ahora (sofá) |
+|---|---|
+| Kobolds | Becarios de MicroLimpiezas Menguantes S.L. (mono y gorra del color de cada jugador) |
+| Montaña de monedas | Montaña de migas, con **el mando de la tele enterrado debajo** |
+| Cobre / plata / oro | Palomitas / ganchitos / galleta |
+| Torres en la cámara acorazada | Cuencos que se van llenando |
+| Tesoros y estanterías | Objetos perdidos (botones, bloques de juguete, pendientes, dados) y bandejas |
+| Paga | Calderilla que aparece entre las migas |
+| Kobolds contratados | Hormigas con casco |
+| Pala / saco / botas | Cuchara (de café a cucharón) / cubo (de tapón a tazón) / zapatillas de estar por casa |
+| Rueda de hámster / tobogán | El hámster de la familia / tobogán de pajita |
+| Resoplido del dragón | Papá ronca, murmura ("Mmm... cinco minutos más...") y da un manotazo |
+| Cueva con antorchas | Hueco entre cojines: pelusas, focos de obra, un móvil perdido encendido y la luz de la tele parpadeando |
 
 ---
 

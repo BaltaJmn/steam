@@ -17,7 +17,7 @@ script = ExtResource("1_world")
 [node name="Cave" type="Node3D" parent="."]
 script = ExtResource("2_cave")
 
-[node name="Sleeper" parent="." instance=ExtResource("3_sleeper")]
+[node name="Dad" parent="." instance=ExtResource("3_sleeper")]
 position = Vector3(0, 0, -12)
 
 [node name="Pile" parent="." instance=ExtResource("4_pile")]
@@ -26,113 +26,113 @@ position = Vector3(0, 0, -6)
 [node name="Sorter" parent="." instance=ExtResource("5_sorter")]
 position = Vector3(0, 0, 3)
 
-[node name="Vault" type="Node3D" parent="."]
+[node name="Bowls" type="Node3D" parent="."]
 
-[node name="CopperStack" parent="Vault" instance=ExtResource("6_stack")]
+[node name="PopcornBowl" parent="Bowls" instance=ExtResource("6_stack")]
 position = Vector3(-5, 0, 10)
-kind = "copper"
+kind = "popcorn"
 
-[node name="SilverStack" parent="Vault" instance=ExtResource("6_stack")]
+[node name="PuffBowl" parent="Bowls" instance=ExtResource("6_stack")]
 position = Vector3(0, 0, 10.5)
-kind = "silver"
+kind = "puff"
 
-[node name="GoldStack" parent="Vault" instance=ExtResource("6_stack")]
+[node name="CookieBowl" parent="Bowls" instance=ExtResource("6_stack")]
 position = Vector3(5, 0, 10)
-kind = "gold"
+kind = "cookie"
 
-[node name="Shelves" type="Node3D" parent="."]
+[node name="Trays" type="Node3D" parent="."]
 
-[node name="Crowns" parent="Shelves" instance=ExtResource("7_shelf")]
+[node name="Buttons" parent="Trays" instance=ExtResource("7_shelf")]
 position = Vector3(15.2, 0, -6)
 rotation = Vector3(0, -1.5708, 0)
-title = "Coronas"
+title = "Botones"
 first_slot_id = 1
-slot_types = PackedStringArray("crown_gold", "crown_gold", "crown_silver")
+slot_types = PackedStringArray("button_red", "button_red", "button_blue")
 
-[node name="Chalices" parent="Shelves" instance=ExtResource("7_shelf")]
+[node name="Blocks" parent="Trays" instance=ExtResource("7_shelf")]
 position = Vector3(15.2, 0, 0)
 rotation = Vector3(0, -1.5708, 0)
-title = "Cálices"
+title = "Bloques de juguete"
 first_slot_id = 4
-slot_types = PackedStringArray("chalice_gold", "chalice_gold", "chalice_silver")
+slot_types = PackedStringArray("block_red", "block_red", "block_yellow")
 
-[node name="Swords" parent="Shelves" instance=ExtResource("7_shelf")]
+[node name="Earrings" parent="Trays" instance=ExtResource("7_shelf")]
 position = Vector3(15.2, 0, 6)
 rotation = Vector3(0, -1.5708, 0)
-title = "Espadas"
+title = "Pendientes"
 first_slot_id = 7
-slot_types = PackedStringArray("sword_gold", "sword_silver")
+slot_types = PackedStringArray("earring_gold", "earring_silver")
 
-[node name="Gems" parent="Shelves" instance=ExtResource("7_shelf")]
+[node name="Dice" parent="Trays" instance=ExtResource("7_shelf")]
 position = Vector3(-15.2, 0, 0)
 rotation = Vector3(0, 1.5708, 0)
-title = "Gemas"
+title = "Dados"
 first_slot_id = 9
-slot_types = PackedStringArray("gem_red", "gem_red", "gem_blue", "gem_green")
+slot_types = PackedStringArray("dice_white", "dice_white", "dice_red", "dice_blue")
 
 [node name="Items" type="Node3D" parent="."]
 
 [node name="Item1" parent="Items" instance=ExtResource("8_item")]
 position = Vector3(-4.5, 0, -2.5)
 item_id = 1
-type_key = "crown_gold"
+type_key = "button_red"
 
 [node name="Item2" parent="Items" instance=ExtResource("8_item")]
 position = Vector3(4.2, 0, -3)
 item_id = 2
-type_key = "crown_gold"
+type_key = "button_red"
 
 [node name="Item3" parent="Items" instance=ExtResource("8_item")]
 position = Vector3(-9, 0, -9)
 item_id = 3
-type_key = "crown_silver"
+type_key = "button_blue"
 
 [node name="Item4" parent="Items" instance=ExtResource("8_item")]
-position = Vector3(5.5, 0, -7)
+position = Vector3(4.6, 0, -6.8)
 item_id = 4
-type_key = "chalice_gold"
+type_key = "block_red"
 
 [node name="Item5" parent="Items" instance=ExtResource("8_item")]
 position = Vector3(-6, 0, 2)
 item_id = 5
-type_key = "chalice_gold"
+type_key = "block_red"
 
 [node name="Item6" parent="Items" instance=ExtResource("8_item")]
 position = Vector3(11, 0, -10)
 item_id = 6
-type_key = "chalice_silver"
+type_key = "block_yellow"
 
 [node name="Item7" parent="Items" instance=ExtResource("8_item")]
 position = Vector3(-3, 0, 0.5)
 rotation = Vector3(0, 0.8, 0)
 item_id = 7
-type_key = "sword_gold"
+type_key = "earring_gold"
 
 [node name="Item8" parent="Items" instance=ExtResource("8_item")]
 position = Vector3(8, 0, 3)
 rotation = Vector3(0, -0.5, 0)
 item_id = 8
-type_key = "sword_silver"
+type_key = "earring_silver"
 
 [node name="Item9" parent="Items" instance=ExtResource("8_item")]
 position = Vector3(-12, 0, 7)
 item_id = 9
-type_key = "gem_red"
+type_key = "dice_white"
 
 [node name="Item10" parent="Items" instance=ExtResource("8_item")]
-position = Vector3(7, 0, -11)
+position = Vector3(9, 0, -8)
 item_id = 10
-type_key = "gem_red"
+type_key = "dice_white"
 
 [node name="Item11" parent="Items" instance=ExtResource("8_item")]
 position = Vector3(-9.5, 0, -12)
 item_id = 11
-type_key = "gem_blue"
+type_key = "dice_red"
 
 [node name="Item12" parent="Items" instance=ExtResource("8_item")]
 position = Vector3(12, 0, 8)
 item_id = 12
-type_key = "gem_green"
+type_key = "dice_blue"
 
 [node name="UpgradeBoard" parent="." instance=ExtResource("9_board")]
 position = Vector3(9, 0, 12)

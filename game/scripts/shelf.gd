@@ -1,14 +1,15 @@
 @tool
 extends Node3D
-## Estantería con huecos. Los huecos se crean solos a partir de slot_types, con
-## ids consecutivos desde first_slot_id. La parte de delante mira hacia +Z.
+## Bandeja de objetos perdidos (la ha puesto mamá) con huecos. Los huecos se
+## crean solos a partir de slot_types, con ids consecutivos desde first_slot_id.
+## La parte de delante mira hacia +Z.
 
 const SLOT_SCRIPT := preload("res://scripts/slot.gd")
 const BOARD_HEIGHT := 0.94
 
-@export var title := "Coronas"
+@export var title := "Botones"
 @export var first_slot_id := 1
-@export var slot_types := PackedStringArray(["crown_gold", "crown_gold", "crown_silver"])
+@export var slot_types := PackedStringArray(["button_red", "button_red", "button_blue"])
 @export var spacing := 0.8
 
 

@@ -31,13 +31,13 @@ var players := {}  # peer_id -> {name, color, spawn, load_kind, load, item}
 var wallet := 0
 var upgrades := {}
 var noise := 0.0
-var workers_net := []  # [[posición, lleva_monedas], ...]
+var workers_net := []  # [[posición, lleva_migas], ...]
 var completed := false
 
 # --- Solo local ---
 var player_nodes := {}  # peer_id -> nodo Player
 var player_pos := {}  # peer_id -> última posición conocida
-var anchors := {}  # puntos del mapa que usan los kobolds y el dragón
+var anchors := {}  # puntos del mapa que usan las hormigas y papá
 
 # --- Solo en el host ---
 var _world_ready := false
@@ -60,11 +60,11 @@ func _ready() -> void:
 
 
 func reset() -> void:
-	pile = _zero_coins()
-	pile_start = _zero_coins()
-	hopper = _zero_coins()
-	bins = _zero_coins()
-	stacks = _zero_coins()
+	pile = _zero_crumbs()
+	pile_start = _zero_crumbs()
+	hopper = _zero_crumbs()
+	bins = _zero_crumbs()
+	stacks = _zero_crumbs()
 	items = {}
 	slots = {}
 	players = {}
@@ -116,17 +116,17 @@ func me() -> Dictionary:
 	return players.get(my_id(), {})
 
 
-func coin_sum(coins: Dictionary) -> int:
+func crumb_sum(crumbs: Dictionary) -> int:
 	var total := 0
 	for kind in Balance.KINDS:
-		total += int(coins.get(kind, 0))
+		total += int(crumbs.get(kind, 0))
 	return total
 
 
 func load_total(player: Dictionary) -> int:
 	if player.is_empty():
 		return 0
-	return coin_sum(player["load"])
+	return crumb_sum(player["load"])
 
 
 func upgrade_level(id: String) -> int:
@@ -150,16 +150,16 @@ func capacity() -> int:
 
 
 func pile_fraction() -> float:
-	var start := coin_sum(pile_start)
-	return 1.0 if start <= 0 else float(coin_sum(pile)) / float(start)
+	var start := crumb_sum(pile_start)
+	return 1.0 if start <= 0 else float(crumb_sum(pile)) / float(start)
 
 
-func coins_sorted() -> int:
-	return coin_sum(stacks)
+func crumbs_sorted() -> int:
+	return crumb_sum(stacks)
 
 
-func coins_total() -> int:
-	return coin_sum(pile_start)
+func crumbs_total() -> int:
+	return crumb_sum(pile_start)
 
 
 func items_placed() -> int:
@@ -171,9 +171,9 @@ func items_placed() -> int:
 
 
 func is_complete() -> bool:
-	if items.is_empty() or coins_total() == 0:
+	if items.is_empty() or crumbs_total() == 0:
 		return false
-	return coins_sorted() >= coins_total() and items_placed() >= items.size()
+	return crumbs_sorted() >= crumbs_total() and items_placed() >= items.size()
 
 
 # --- Peticiones al host ---
@@ -357,13 +357,13 @@ func _srv_hello(sender: int, player_name: String) -> void:
 		return
 	var clean := player_name.strip_edges().left(20)
 	if clean == "":
-		clean = "Kobold"
+		clean = "Becario"
 	players[sender] = {
 		"name": clean,
 		"color": PLAYER_COLORS[_join_count % PLAYER_COLORS.size()],
 		"spawn": _join_count % 4,
 		"load_kind": "",
-		"load": _zero_coins(),
+		"load": _zero_crumbs(),
 		"item": -1,
 	}
 	_join_count += 1
@@ -383,9 +383,9 @@ func _srv_scoop(sender: int) -> void:
 	if space <= 0:
 		return
 	var taken := _take_mixed(pile, mini(int(upgrade_value("shovel")), space))
-	if coin_sum(taken) == 0:
+	if crumb_sum(taken) == 0:
 		return
-	_add_coins(p["load"], taken)
+	_add_crumbs(p["load"], taken)
 	p["load_kind"] = "mixed"
 	_mark("pile")
 	_mark("player:%d" % sender)
@@ -395,7 +395,7 @@ func _srv_dump(sender: int) -> void:
 	var p: Dictionary = players[sender]
 	if p["load_kind"] != "mixed":
 		return
-	_add_coins(hopper, p["load"])
+	_add_crumbs(hopper, p["load"])
 	_clear_load(p)
 	_add_noise(sender, Balance.NOISE_DUMP)
 	_mark("hopper")
@@ -403,7 +403,7 @@ func _srv_dump(sender: int) -> void:
 
 
 func _srv_crank(sender: int) -> void:
-	if coin_sum(hopper) == 0:
+	if crumb_sum(hopper) == 0:
 		return
 	if not _cooldown_ok(sender, "crank", Balance.CRANK_INTERVAL):
 		return
@@ -436,12 +436,12 @@ func _srv_deposit(sender: int, kind: String) -> void:
 	var amount := int(p["load"][kind])
 	stacks[kind] = int(stacks[kind]) + amount
 	_clear_load(p)
-	_pay_coins(amount)
+	_pay_for_crumbs(amount)
 	_mark("stacks")
 	_mark("player:%d" % sender)
 
 
-## Soltar monedas: vuelven a su sitio (las mezcladas a la montaña, las
+## Soltar migas: vuelven a su sitio (las mezcladas a la montaña, las
 ## clasificadas a su cubeta).
 func _srv_return_load(sender: int) -> void:
 	var p: Dictionary = players[sender]
@@ -449,10 +449,10 @@ func _srv_return_load(sender: int) -> void:
 		"":
 			return
 		"mixed":
-			_add_coins(pile, p["load"])
+			_add_crumbs(pile, p["load"])
 			_mark("pile")
 		_:
-			_add_coins(bins, p["load"])
+			_add_crumbs(bins, p["load"])
 			_mark("bins")
 	_clear_load(p)
 	_mark("player:%d" % sender)
@@ -553,7 +553,7 @@ func _on_peer_disconnected(id: int) -> void:
 	_flush()
 
 
-# --- Lógica del host: automatización, kobolds y ruido ---
+# --- Lógica del host: automatización, hormigas y ruido ---
 
 func _process(delta: float) -> void:
 	if not _world_ready or not multiplayer.is_server():
@@ -572,7 +572,7 @@ func _process(delta: float) -> void:
 
 func _update_automation(delta: float) -> void:
 	var wheel := upgrade_value("wheel")
-	if wheel > 0.0 and coin_sum(hopper) > 0:
+	if wheel > 0.0 and crumb_sum(hopper) > 0:
 		_wheel_acc += wheel * delta
 		var to_sort := int(_wheel_acc)
 		if to_sort > 0:
@@ -582,7 +582,7 @@ func _update_automation(delta: float) -> void:
 		_wheel_acc = 0.0
 
 	var chute := upgrade_value("chute")
-	if chute > 0.0 and coin_sum(bins) > 0:
+	if chute > 0.0 and crumb_sum(bins) > 0:
 		_chute_acc += chute * delta
 		var to_move := int(_chute_acc)
 		if to_move > 0:
@@ -594,7 +594,7 @@ func _update_automation(delta: float) -> void:
 				stacks[kind] = int(stacks[kind]) + amount
 				moved += amount
 			if moved > 0:
-				_pay_coins(moved)
+				_pay_for_crumbs(moved)
 				_mark("bins")
 				_mark("stacks")
 	else:
@@ -608,7 +608,7 @@ func _update_workers(delta: float) -> void:
 		var offset := Vector3(randf_range(-1.2, 1.2), 0.0, randf_range(-0.6, 0.6))
 		_workers.append({
 			"pos": spawn + offset, "offset": offset, "state": "to_pile", "t": 0.0,
-			"coins": _zero_coins(),
+			"crumbs": _zero_crumbs(),
 		})
 	if not anchors.has("pile_point") or not anchors.has("hopper_point"):
 		return
@@ -625,11 +625,11 @@ func _update_workers(delta: float) -> void:
 				worker["t"] = float(worker["t"]) - delta
 				if float(worker["t"]) <= 0.0:
 					var taken := _take_mixed(pile, Balance.WORKER_CAPACITY)
-					if coin_sum(taken) == 0:
+					if crumb_sum(taken) == 0:
 						worker["state"] = "idle"
 						worker["t"] = 1.0
 					else:
-						worker["coins"] = taken
+						worker["crumbs"] = taken
 						worker["state"] = "to_hopper"
 						_mark("pile")
 			"to_hopper":
@@ -639,19 +639,19 @@ func _update_workers(delta: float) -> void:
 			"dump":
 				worker["t"] = float(worker["t"]) - delta
 				if float(worker["t"]) <= 0.0:
-					_add_coins(hopper, worker["coins"])
-					worker["coins"] = _zero_coins()
+					_add_crumbs(hopper, worker["crumbs"])
+					worker["crumbs"] = _zero_crumbs()
 					worker["state"] = "to_pile"
 					_mark("hopper")
 			"idle":
 				worker["t"] = float(worker["t"]) - delta
 				if float(worker["t"]) <= 0.0:
 					worker["t"] = 1.0
-					if coin_sum(pile) > 0:
+					if crumb_sum(pile) > 0:
 						worker["state"] = "to_pile"
 
 
-## Mueve al kobold hacia el objetivo. Devuelve true al llegar.
+## Mueve a la hormiga hacia el objetivo. Devuelve true al llegar.
 func _walk(worker: Dictionary, target: Vector3, delta: float) -> bool:
 	var pos: Vector3 = worker["pos"]
 	var to := target - pos
@@ -666,7 +666,7 @@ func _walk(worker: Dictionary, target: Vector3, delta: float) -> bool:
 func _send_streams() -> void:
 	var data := []
 	for worker in _workers:
-		data.append([worker["pos"], coin_sum(worker["coins"]) > 0])
+		data.append([worker["pos"], crumb_sum(worker["crumbs"]) > 0])
 	workers_net = data
 	changed.emit("workers", 0)
 	if Network.is_online() and not data.is_empty():
@@ -688,7 +688,7 @@ func _add_noise(sender: int, amount: float) -> void:
 		_snort()
 
 
-## El dragón resopla en sueños: sale volando quien más ruido ha hecho.
+## Papá ronca fuerte y se da la vuelta: sale volando quien más ruido ha hecho.
 func _snort() -> void:
 	var target := -1
 	var loudest := -1.0
@@ -714,33 +714,36 @@ func _check_complete() -> void:
 
 # --- Utilidades ---
 
-func _zero_coins() -> Dictionary:
-	return {"copper": 0, "silver": 0, "gold": 0}
+func _zero_crumbs() -> Dictionary:
+	var empty := {}
+	for kind in Balance.KINDS:
+		empty[kind] = 0
+	return empty
 
 
-func _add_coins(target: Dictionary, source: Dictionary) -> void:
+func _add_crumbs(target: Dictionary, source: Dictionary) -> void:
 	for kind in Balance.KINDS:
 		target[kind] = int(target.get(kind, 0)) + int(source.get(kind, 0))
 
 
 func _clear_load(player: Dictionary) -> void:
-	player["load"] = _zero_coins()
+	player["load"] = _zero_crumbs()
 	player["load_kind"] = ""
 
 
 func _sort_from_hopper(amount: int) -> void:
 	var moved := _take_mixed(hopper, amount)
-	if coin_sum(moved) == 0:
+	if crumb_sum(moved) == 0:
 		return
-	_add_coins(bins, moved)
+	_add_crumbs(bins, moved)
 	_mark("hopper")
 	_mark("bins")
 
 
-## Saca "amount" monedas de "source" respetando la proporción de cada tipo.
+## Saca "amount" migas de "source" respetando la proporción de cada tipo.
 func _take_mixed(source: Dictionary, amount: int) -> Dictionary:
-	var taken := _zero_coins()
-	var total := coin_sum(source)
+	var taken := _zero_crumbs()
+	var total := crumb_sum(source)
 	amount = mini(amount, total)
 	if amount <= 0:
 		return taken
@@ -749,7 +752,7 @@ func _take_mixed(source: Dictionary, amount: int) -> Dictionary:
 		var share := int(floor(float(amount) * float(source[kind]) / float(total)))
 		taken[kind] = share
 		count += share
-	# El resto (por redondeo) se reparte entre los tipos que aún tienen monedas.
+	# El resto (por redondeo) se reparte entre los tipos que aún tienen migas.
 	var i := 0
 	while count < amount:
 		var kind: String = Balance.KINDS[i % Balance.KINDS.size()]
@@ -762,11 +765,11 @@ func _take_mixed(source: Dictionary, amount: int) -> Dictionary:
 	return taken
 
 
-func _pay_coins(amount: int) -> void:
+func _pay_for_crumbs(amount: int) -> void:
 	_pay_remainder += amount
 	@warning_ignore("integer_division")
-	var earned := _pay_remainder / Balance.COINS_PER_PAY
-	_pay_remainder -= earned * Balance.COINS_PER_PAY
+	var earned := _pay_remainder / Balance.CRUMBS_PER_PAY
+	_pay_remainder -= earned * Balance.CRUMBS_PER_PAY
 	if earned > 0:
 		wallet += earned
 		_mark("economy")

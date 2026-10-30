@@ -17,7 +17,7 @@ var last_message := ""  # se muestra en el menú al volver (p. ej. "el host se h
 
 
 func _ready() -> void:
-	player_name = "Kobold %d" % (randi() % 900 + 100)
+	player_name = "Becario %d" % (randi() % 900 + 100)
 	multiplayer.connected_to_server.connect(_on_connected)
 	multiplayer.connection_failed.connect(_on_connection_failed)
 	multiplayer.server_disconnected.connect(_on_server_disconnected)

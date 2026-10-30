@@ -33,13 +33,13 @@ func _build() -> void:
 	center.add_child(box)
 
 	var title := Label.new()
-	title.text = "KOBOLD KEEPERS"
+	title.text = "COUCH CREW"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 56)
 	title.add_theme_color_override("font_color", Color(1.0, 0.8, 0.35))
 	box.add_child(title)
 	var subtitle := Label.new()
-	subtitle.text = "Prototipo · ordena el tesoro sin despertar a %s" % Balance.SLEEPER_NAME
+	subtitle.text = "Prototipo · encontrad el mando de la tele sin despertar a %s" % Balance.SLEEPER_NAME
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(subtitle)
 

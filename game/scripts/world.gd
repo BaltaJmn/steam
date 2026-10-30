@@ -1,6 +1,6 @@
 extends Node3D
 ## Monta la partida: si somos host, registra en Game lo que hay en la escena, y
-## en todos los casos crea o borra los nodos de jugadores y kobolds según el
+## en todos los casos crea o borra los nodos de jugadores y hormigas según el
 ## estado compartido.
 
 const PLAYER_SCENE := preload("res://scenes/player.tscn")
@@ -36,7 +36,7 @@ func _on_session_ended(reason: String) -> void:
 	return_to_menu(reason)
 
 
-## Puntos del mapa que necesitan los kobolds y el dragón (iguales en todos los
+## Puntos del mapa que necesitan las hormigas y papá (iguales en todos los
 ## jugadores, porque la escena es la misma).
 func _register_anchors() -> void:
 	var pile := get_tree().get_first_node_in_group("pile") as Node3D
@@ -61,7 +61,7 @@ func _collect_items() -> Dictionary:
 		var item := node as Node3D
 		var id := int(item.get("item_id"))
 		if result.has(id):
-			push_warning("Hay dos tesoros con el mismo item_id: %d" % id)
+			push_warning("Hay dos objetos con el mismo item_id: %d" % id)
 		var pos := item.global_position
 		result[id] = {
 			"type": str(item.get("type_key")), "state": "loose", "pos": Vector3(pos.x, 0.0, pos.z),

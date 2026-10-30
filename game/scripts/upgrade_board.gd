@@ -1,6 +1,6 @@
 @tool
 extends Node3D
-## Tablón de mejoras. Las mejoras son de toda la tripulación (compartidas).
+## Tablón de mejoras de la empresa. Son de toda la cuadrilla (compartidas).
 ## La parte de delante mira hacia +Z.
 
 
@@ -13,14 +13,14 @@ func _ready() -> void:
 		Visuals.LAYER_WORLD | Visuals.LAYER_INTERACT
 	)
 	Visuals.label(self, "MEJORAS", Vector3(0, 2.0, 0.06), 96, Color(1.0, 0.88, 0.55), false)
-	Visuals.label(self, "para toda la tripulación", Vector3(0, 1.65, 0.06), 48, Color(0.95, 0.9, 0.8), false)
+	Visuals.label(self, Balance.COMPANY_NAME, Vector3(0, 1.65, 0.06), 30, Color(0.95, 0.9, 0.8), false)
 	if Engine.is_editor_hint():
 		return
 	add_to_group("upgrade_board")
 
 
 func get_prompt(_player: Node, _part: String) -> String:
-	return "[E] Tablón de mejoras · paga disponible: %d" % Game.wallet
+	return "[E] Tablón de mejoras · calderilla: %d" % Game.wallet
 
 
 func interact(_player: Node, _part: String) -> void:

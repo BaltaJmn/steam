@@ -1,10 +1,10 @@
 @tool
 extends Node3D
-## Tesoro suelto: se coge, se lleva en la mano y se coloca en su hueco.
-## Cada tesoro de la escena necesita un item_id único.
+## Objeto perdido en el sofá: se coge, se lleva en la mano y se devuelve a su
+## hueco en la bandeja. Cada objeto de la escena necesita un item_id único.
 
 @export var item_id := 0
-@export var type_key := "crown_gold"
+@export var type_key := "button_red"
 
 var _mesh: MeshInstance3D
 var _area: Area3D
@@ -37,14 +37,11 @@ func _build() -> void:
 	_set_pose(false)
 
 
-## De pie (en la mano o en el estante) o tumbado en el suelo.
-func _set_pose(upright: bool) -> void:
-	if type_key.begins_with("sword") and not upright:
-		_mesh.rotation_degrees = Vector3(90, 0, 0)
-		_mesh.position = Vector3(0, 0.015, 0)
-	else:
-		_mesh.rotation_degrees = Vector3.ZERO
-		_mesh.position = Vector3(0, Visuals.item_height(type_key) / 2.0, 0)
+## Apoyado (en el suelo, en la mano o en la bandeja). Por ahora todos los
+## objetos se apoyan igual; se deja el parámetro para cuando haya modelos.
+func _set_pose(_upright: bool) -> void:
+	_mesh.rotation_degrees = Vector3.ZERO
+	_mesh.position = Vector3(0, Visuals.item_height(type_key) / 2.0, 0)
 
 
 func _on_changed(what: String, id: int) -> void:

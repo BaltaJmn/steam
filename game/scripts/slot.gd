@@ -1,9 +1,9 @@
 @tool
 extends Node3D
-## Hueco con la silueta (fantasma) del tesoro que va ahí. Lo crea la estantería.
+## Hueco con la silueta (fantasma) del objeto que va ahí. Lo crea la bandeja.
 
 @export var slot_id := 0
-@export var type_key := "crown_gold"
+@export var type_key := "button_red"
 
 var _ghost: MeshInstance3D
 var _area: Area3D

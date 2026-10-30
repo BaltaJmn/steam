@@ -97,7 +97,7 @@ func _build() -> void:
 	_place(_toast, 0, 0.26, 1, 0.26, 0, 0, 0, 44)
 
 	_win = _label(root, 44, HORIZONTAL_ALIGNMENT_CENTER)
-	_win.text = "¡Tesoro ordenado! %s sonríe en sueños." % Balance.SLEEPER_NAME_CAP
+	_win.text = "¡Ahí estaba el mando! %s lo coge sin abrir los ojos, pone el fútbol y sigue roncando." % Balance.SLEEPER_NAME_CAP
 	_win.modulate = Color(1.0, 0.85, 0.4)
 	_win.visible = false
 	_place(_win, 0, 0.14, 1, 0.14, 0, 0, 0, 60)
@@ -113,7 +113,7 @@ func _build_upgrades_panel(root: Control) -> void:
 	_place(_upgrades_panel, 0.5, 0.5, 0.5, 0.5, -360, -280, 360, 280)
 	var box := _margin_box(_upgrades_panel)
 	var title := _label(box, 30)
-	title.text = "Mejoras de la tripulación"
+	title.text = "Mejoras de la cuadrilla"
 	_wallet_label = _label(box, 22)
 	_upgrades_list = VBoxContainer.new()
 	_upgrades_list.add_theme_constant_override("separation", 8)
@@ -238,12 +238,12 @@ func _on_game_changed(what: String, id: int) -> void:
 func _on_game_event(ev_name: String, data: Dictionary) -> void:
 	match ev_name:
 		"snort":
-			toast("¡%s resopla en sueños! %s sale volando" % [Balance.SLEEPER_NAME_CAP, data.get("name", "")], Color(1.0, 0.55, 0.35))
+			toast("¡%s ronca, se revuelve y da un manotazo! %s sale volando" % [Balance.SLEEPER_NAME_CAP, data.get("name", "")], Color(1.0, 0.55, 0.35))
 		"bought":
 			var upgrade: Dictionary = Balance.UPGRADES.get(data.get("upgrade", ""), {})
 			toast("%s ha comprado: %s (nivel %d)" % [data.get("name", ""), upgrade.get("name", "?"), int(data.get("level", 0))], Color(0.7, 1.0, 0.7))
 		"joined":
-			toast("%s se ha unido a la tripulación" % data.get("name", ""), Color(0.8, 0.9, 1.0))
+			toast("%s se ha unido a la cuadrilla" % data.get("name", ""), Color(0.8, 0.9, 1.0))
 		"left":
 			toast("%s se ha ido" % data.get("name", ""), Color(0.8, 0.8, 0.8))
 		"complete":
@@ -259,12 +259,12 @@ func _refresh_all() -> void:
 
 func _refresh_info() -> void:
 	var lines := PackedStringArray()
-	lines.append("Monedas ordenadas: %d / %d" % [Game.coins_sorted(), Game.coins_total()])
-	lines.append("Tesoros colocados: %d / %d" % [Game.items_placed(), Game.items.size()])
-	lines.append("Paga: %d" % Game.wallet)
+	lines.append("Migas recogidas: %d / %d" % [Game.crumbs_sorted(), Game.crumbs_total()])
+	lines.append("Objetos devueltos: %d / %d" % [Game.items_placed(), Game.items.size()])
+	lines.append("Calderilla: %d" % Game.wallet)
 	var workers := int(Game.upgrade_value("workers"))
 	if workers > 0:
-		lines.append("Kobolds contratados: %d" % workers)
+		lines.append("Hormigas contratadas: %d" % workers)
 	_info.text = "\n".join(lines)
 
 
@@ -278,9 +278,9 @@ func _refresh_carry() -> void:
 	if item_id != -1 and Game.items.has(item_id):
 		_carry.text = "Llevas: %s · [Q] soltar" % Balance.item_name(Game.items[item_id]["type"])
 	elif load_kind == "mixed":
-		_carry.text = "Llevas: %d / %d monedas mezcladas · [Q] devolver" % [Game.load_total(data), Game.capacity()]
+		_carry.text = "Llevas: %d / %d migas mezcladas · [Q] devolver" % [Game.load_total(data), Game.capacity()]
 	elif load_kind != "":
-		_carry.text = "Llevas: %d / %d monedas de %s · [Q] devolver" % [Game.load_total(data), Game.capacity(), Balance.KIND_NAMES[load_kind]]
+		_carry.text = "Llevas: %d / %d migas de %s · [Q] devolver" % [Game.load_total(data), Game.capacity(), Balance.KIND_NAMES[load_kind]]
 	else:
 		_carry.text = ""
 
@@ -297,7 +297,7 @@ func _refresh_upgrades() -> void:
 	if str(Game.upgrades) != _shown_levels:
 		_rebuild_upgrades()
 		return
-	_wallet_label.text = "Paga disponible: %d" % Game.wallet
+	_wallet_label.text = "Calderilla disponible: %d" % Game.wallet
 	for id in _upgrade_buttons:
 		var cost: int = Game.upgrade_cost(id)
 		var button: Button = _upgrade_buttons[id]
@@ -310,7 +310,7 @@ func _rebuild_upgrades() -> void:
 		child.queue_free()
 	_upgrade_buttons.clear()
 	_shown_levels = str(Game.upgrades)
-	_wallet_label.text = "Paga disponible: %d" % Game.wallet
+	_wallet_label.text = "Calderilla disponible: %d" % Game.wallet
 	for id in Balance.UPGRADE_ORDER:
 		var definition: Dictionary = Balance.UPGRADES[id]
 		var costs: Array = definition["costs"]

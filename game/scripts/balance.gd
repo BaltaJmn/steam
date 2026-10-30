@@ -4,22 +4,23 @@ extends RefCounted
 ## Todos los números y textos de diseño en un solo sitio, para equilibrar sin
 ## tocar la lógica. Los valores son de prototipo (partida corta para probar).
 
-# Ambientación provisional: si cambia el tema, se cambia aquí.
-const SLEEPER_NAME := "el dragón"
-const SLEEPER_NAME_CAP := "El dragón"
+# El que duerme encima y al que no hay que despertar.
+const SLEEPER_NAME := "papá"
+const SLEEPER_NAME_CAP := "Papá"
+const COMPANY_NAME := "MicroLimpiezas Menguantes S.L."
 
-# Tamaño jugable de la cueva (mitad en X y en Z, en metros).
+# Tamaño jugable del hueco entre los cojines (mitad en X y en Z, en metros).
 const ROOM_HALF_X := 17.0
 const ROOM_HALF_Z := 14.0
 
-# --- Monedas ---
-const KINDS := ["copper", "silver", "gold"]
+# --- Migas ---
+const KINDS := ["popcorn", "puff", "cookie"]
 const KIND_NAMES := {
-	"mixed": "monedas mezcladas", "copper": "cobre", "silver": "plata", "gold": "oro",
+	"mixed": "migas mezcladas", "popcorn": "palomitas", "puff": "ganchitos", "cookie": "galleta",
 }
-const PILE_START := {"copper": 3600, "silver": 1800, "gold": 600}
-const COINS_PER_PAY := 8  # 1 de paga por cada 8 monedas apiladas
-const ITEM_PAY := 15  # paga por cada tesoro colocado
+const PILE_START := {"popcorn": 3600, "puff": 1800, "cookie": 600}
+const CRUMBS_PER_PAY := 8  # entre cada 8 migas aparece 1 moneda de calderilla
+const ITEM_PAY := 15  # calderilla por cada objeto devuelto a su hueco
 const SCOOP_COOLDOWN := 0.3
 const CRANK_INTERVAL := 0.2
 
@@ -29,54 +30,59 @@ const NOISE_AFTER_SNORT := 35.0
 const NOISE_DECAY := 6.0  # por segundo
 const NOISE_SPRINT := 9.0  # por segundo corriendo
 const NOISE_LAND := 6.0  # al caer de un salto
-const NOISE_DUMP := 3.0  # al vaciar un saco en la tolva
+const NOISE_DUMP := 3.0  # al vaciar el cubo en la tolva
 const NOISE_CRANK := 0.35  # por cada vuelta de manivela
-const NOISE_DROP := 5.0  # al tirar un tesoro al suelo
+const NOISE_DROP := 5.0  # al tirar un objeto al suelo
 
-# --- Kobolds contratados ---
+# --- Hormigas contratadas ---
 const WORKER_CAPACITY := 30
 const WORKER_SPEED := 2.2
 const WORKER_SCOOP_TIME := 1.2
 const WORKER_DUMP_TIME := 0.6
 
-# --- Mejoras (compartidas por toda la tripulación) ---
+# --- Mejoras (compartidas por toda la cuadrilla) ---
 # "values" tiene un valor más que "costs": el del nivel 0.
 const UPGRADE_ORDER := ["shovel", "sack", "crank", "boots", "workers", "wheel", "chute"]
 const UPGRADES := {
 	"shovel": {
-		"name": "Pala más grande", "desc": "Más monedas por palada",
+		"name": "Cuchara más grande", "desc": "Cucharilla de café → de postre → sopera → cucharón",
 		"costs": [10, 30, 60], "values": [20, 35, 60, 100],
 	},
 	"sack": {
-		"name": "Saco más grande", "desc": "Llevas más monedas por viaje",
+		"name": "Cubo más grande", "desc": "Tapón de botella → vaso de chupito → taza → tazón",
 		"costs": [15, 35, 70], "values": [60, 100, 160, 250],
 	},
 	"crank": {
-		"name": "Manivela engrasada", "desc": "Cada vuelta clasifica más monedas",
+		"name": "Manivela engrasada", "desc": "Cada vuelta clasifica más migas",
 		"costs": [10, 30, 60], "values": [6, 10, 16, 25],
 	},
 	"boots": {
-		"name": "Botas de silencio", "desc": "Todo lo que haces hace menos ruido",
+		"name": "Zapatillas de estar por casa", "desc": "Todo lo que haces hace menos ruido",
 		"costs": [15, 40], "values": [1.0, 0.6, 0.3],
 	},
 	"workers": {
-		"name": "Contratar kobold", "desc": "Palea de la montaña a la tolva por ti",
+		"name": "Contratar hormiga", "desc": "Lleva migas de la montaña a la tolva por ti",
 		"costs": [30, 60, 100], "values": [0, 1, 2, 3],
 	},
 	"wheel": {
-		"name": "Rueda de hámster", "desc": "La clasificadora gira sola (monedas/s)",
+		"name": "El hámster de la familia", "desc": "Hace girar la clasificadora él solo (migas/s)",
 		"costs": [50, 100], "values": [0, 8, 20],
 	},
 	"chute": {
-		"name": "Tobogán a la cámara", "desc": "Las cubetas se vacían solas en las torres (monedas/s)",
+		"name": "Tobogán de pajita", "desc": "Las cubetas se vacían solas en los cuencos (migas/s)",
 		"costs": [60, 120], "values": [0, 6, 15],
 	},
 }
 
-# --- Tesoros ---
-const SHAPE_NAMES := {"crown": "Corona", "chalice": "Cáliz", "sword": "Espada", "gem": "Gema"}
+# --- Objetos perdidos en el sofá ---
+# type_key = "<forma>_<color>". Todos los nombres son masculinos para que
+# concuerden con el color ("Botón rojo", "Dado blanco"...).
+const SHAPE_NAMES := {
+	"button": "Botón", "block": "Bloque de juguete", "earring": "Pendiente", "dice": "Dado",
+}
 const MATERIAL_NAMES := {
-	"gold": "de oro", "silver": "de plata", "red": "roja", "blue": "azul", "green": "verde",
+	"red": "rojo", "blue": "azul", "yellow": "amarillo", "white": "blanco",
+	"gold": "de oro", "silver": "de plata",
 }
 
 
