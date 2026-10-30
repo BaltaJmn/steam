@@ -9,7 +9,7 @@
 
 | Tema | Decisión | Por qué |
 |---|---|---|
-| Idea | **El tesoro del dragón** (sección 4) | Elegida por el autor |
+| Idea | Mecánicas de la sección 4, **con otra temática** (en elección, [sección 0.3](#03-nueva-temática-en-elección)) | El dragón choca con *Folded Fables*. Se busca un origen absurdo y gracioso |
 | Equipo | 1 persona | — |
 | Motor | **Godot 4.7** (Forward+) | Ver abajo |
 | Progreso offline | **No.** El juego no avanza con el juego cerrado | Los ayudantes son gente contratada que trabaja contigo mientras juegas y acelera el ritmo |
@@ -42,6 +42,30 @@ Consecuencias:
 2. **Nombre: *Kobold Keepers*, sin "Tidy Up the Dragon's Hoard!".** Con dragón, esa coletilla se leería como copia de Folded Fables. El descubrimiento en Steam lo dan las etiquetas (*Cozy*, *Organizing*, *Co-op*, *Incremental*, *Automation*) y la descripción ("un juego de ordenar..."). Lema: *"Ordena el tesoro. No despiertes al dragón."* No he encontrado ningún juego en Steam con ese nombre, pero hay que confirmarlo (y comprobar marcas) antes de crear la página.
 
 3. **Plan B si se quiere esquivar del todo la comparación:** las mismas mecánicas con otra ambientación, porque el prototipo es independiente del tema (el nombre del "durmiente" está en `Balance.SLEEPER_NAME`). La mejor alternativa que veo es **un kraken dormido en un barco hundido con una tripulación de cangrejos**: bajo el agua, la niebla abarata el escenario y queda muy bonito.
+
+   *Actualización:* se descarta el dragón. Además existe *Goblin Cleanup* (goblins limpiando mazmorras en coop), así que también conviene dejar los kobolds. Ver 0.3.
+
+### 0.3 Nueva temática (en elección)
+
+**Lo que se pide:** un origen absurdo, llamativo y que haga gracia. **Lo que se mantiene:** todas las mecánicas del prototipo:
+- montaña de cosas mezcladas → máquina que clasifica → tres montones;
+- objetos especiales con su hueco;
+- alguien dormido al que no hay que despertar (el ruido);
+- ayudantes contratados y mejoras.
+
+| | Temática | Origen (la gracia) | Cómo encajan las mecánicas | Riesgo |
+|---|---|---|---|---|
+| ⭐ | **El sofá de papá** (*Couch Crew*) | Papá lleva 20 años echándose la siesta en el mismo sofá y entre los cojines ya hay un ecosistema. La familia contrata a **MicroLimpiezas Menguantes S.L.**, que encoge a sus empleados con un rayo. Encargo: **recuperar el mando de la tele** | Migas mezcladas (palomitas, ganchitos, galleta) → clasificadora → tres cuencos. Las monedas sueltas son la paga. Objetos perdidos: mandos de todo tipo, gafas, llaves, LEGO, un chupete... Si hacéis ruido, papá se da la vuelta y el terremoto de cojín lanza al más ruidoso. Ayudantes: **hormigas con casco**. Automatización: una roomba en miniatura y una cinta hecha con una regla | No he encontrado nada igual en Steam. Ojo: "Don't Wake Dad" es un juego de mesa, así que no usar ese nombre |
+| | **El bolso sin fondo de la abuela** | El bolso es más grande por dentro y la abuela lleva perdiendo cosas ahí desde 1974. Busca sus gafas... **que llevaba en la cabeza** (gag final) | Caramelos de 3 colores → tarros. Objetos: monedero, pintalabios, dentadura, recetas... Si hacéis ruido, la abuela mete la mano a rebuscar | Existe *Tidy Backpack* (puzle de mochila, distinto) |
+| | **La ballena con indigestión** | Lleva 300 años tragándose barcos y le duele la tripa | Chatarra/monedas/sardinas. Objetos: anclas, timones, un piano, un pescador dormido. Si hacéis ruido, **eructo** | Varios juegos de ballenas recientes (*Whale Cleaner*, *BLOWHOLE*). Puede resultar asqueroso para el público cozy |
+| | **La barba del vikingo** | El vikingo más peludo del mundo lleva 40 años sin peinarse | Migas de pan, queso y galleta. Objetos: cucharas, un casco, una familia de ardillas. Si hacéis ruido, se rasca | El pelo es caro de modelar bien |
+
+**Recomendación: el sofá de papá.**
+- Es universal: todo el mundo ha perdido algo en el sofá y conoce a alguien que se duerme viendo la tele.
+- El objetivo final ya es un chiste: encontrar el mando.
+- La miniatura se entiende sola: un papá gigante roncando y obreros diminutos entre los cojines.
+- El escenario es baratísimo: los cojines son cajas redondeadas con textura de tela y la luz entra por las rendijas.
+- **Final:** encontráis el mando, papá se despierta, lo coge sin mirar, pone el fútbol y vuelve a dormirse.
 
 ---
 
