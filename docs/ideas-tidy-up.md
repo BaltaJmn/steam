@@ -1,7 +1,47 @@
 # Ideas "Tidy Up": juegos súper simples, con coop y casi sin coste
 
-> **Estado:** borrador para discutir. Sustituye en alcance a [`concepto-inicial.md`](concepto-inicial.md), que se queda aparcado (ver [sección 8](#8-y-la-idea-del-océano)).
+> **Estado:** dirección elegida (el dragón). Las decisiones tomadas están en la [sección 0](#0-decisiones-tomadas) y el prototipo jugable en [`/game`](../game/README.md). Sustituye en alcance a [`concepto-inicial.md`](concepto-inicial.md), que se queda aparcado.
 > **Objetivo:** un juego muy simple, con un coop divertido y un coste de desarrollo mínimo.
+
+---
+
+## 0. Decisiones tomadas
+
+| Tema | Decisión | Por qué |
+|---|---|---|
+| Idea | **El tesoro del dragón** (sección 4) | Elegida por el autor |
+| Equipo | 1 persona | — |
+| Motor | **Godot 4.7** (Forward+) | Ver abajo |
+| Progreso offline | **No.** El juego no avanza con el juego cerrado | Los ayudantes son gente contratada que trabaja contigo mientras juegas y acelera el ritmo |
+| Nombre (provisional) | ***Kobold Keepers***, sin la coletilla *"Tidy Up the …!"* | Ver [sección 0.2](#02-nombre-y-competencia-directa) |
+
+### 0.1 Por qué Godot y no Unity
+
+Has tocado los dos, así que la decisión depende de qué es más cómodo para **una persona sola** y de que se vea bien.
+
+- **Más cómodo.** Es gratis y sin royalties, se abre en segundos y la iteración es inmediata. GDScript es lo más sencillo de aprender de los dos. Trae el multijugador de serie: la API `multiplayer` y `@rpc`, y para Steam se cambia el *peer* por el de **GodotSteam** sin tocar el resto.
+- **Escenas y scripts en texto.** Así puedo escribir y revisar contigo casi cualquier parte del proyecto (escenas incluidas), cosa que con Unity es mucho más difícil.
+- **Se ve bien.** Para una cueva cerrada con oro, el renderer Forward+ tiene todo lo necesario: bloom, niebla volumétrica para los haces de luz, SSAO y metales PBR.
+- **Lo que gana Unity.** Más tutoriales y assets de coop (muchos coop indie recientes se han hecho en Unity) y una tienda de assets más grande. Para un juego de una sola cueva con pocos modelos no compensa.
+
+### 0.2 Nombre y competencia directa
+
+**Ojo: ya existe *Folded Fables: Tidy Up The Dragon Hoard*** (Codename Entertainment). Salió el 15 de octubre de 2026, cuesta 5,99 $ y tiene coop. Es un juego de ordenar ~5.648 tesoros para un dragón, con estética de papel, habilidades (resaltar, invocar, teletransportar a la estantería) y huevos ocultos. En KeenGamer tiene un 9/10 y dura unas 9 h. Es **la misma premisa**, y además el género se está llenando muy rápido (*Megastore: Tidy Up Together*, *Bunker Tidy Up*, *Deep Sea Sweep*...).
+
+Consecuencias:
+
+1. **El tema por sí solo ya no nos diferencia.** Lo que nos distingue es **la mezcla**, que Folded Fables no tiene:
+
+   | | Folded Fables | Kobold Keepers |
+   |---|---|---|
+   | Núcleo | Ordenar objetos en estantes | Ordenar objetos **+ montaña de monedas incremental** |
+   | Progresión | Habilidades con cooldown | Mejoras de herramientas **+ máquinas + kobolds contratados** |
+   | Coop | Ordenar juntos | Roles (palear, manivela, colocar), objetos para dos y **ruido compartido**: si el grupo se pasa, el dragón resopla y sale volando el más ruidoso |
+   | Tono | Cuento de papel, cozy | Comedia de kobolds y sigilo |
+
+2. **Nombre: *Kobold Keepers*, sin "Tidy Up the Dragon's Hoard!".** Con dragón, esa coletilla se leería como copia de Folded Fables. El descubrimiento en Steam lo dan las etiquetas (*Cozy*, *Organizing*, *Co-op*, *Incremental*, *Automation*) y la descripción ("un juego de ordenar..."). Lema: *"Ordena el tesoro. No despiertes al dragón."* No he encontrado ningún juego en Steam con ese nombre, pero hay que confirmarlo (y comprobar marcas) antes de crear la página.
+
+3. **Plan B si se quiere esquivar del todo la comparación:** las mismas mecánicas con otra ambientación, porque el prototipo es independiente del tema (el nombre del "durmiente" está en `Balance.SLEEPER_NAME`). La mejor alternativa que veo es **un kraken dormido en un barco hundido con una tripulación de cangrejos**: bajo el agua, la niebla abarata el escenario y queda muy bonito.
 
 ---
 
@@ -62,7 +102,7 @@
 
 ---
 
-## 4. Recomendada: *Coin by Coin: Tidy Up the Dragon's Hoard!*
+## 4. Elegida: *Kobold Keepers* (antes *Coin by Coin: Tidy Up the Dragon's Hoard!*)
 
 ### 4.1 Pitch
 
@@ -72,7 +112,7 @@
 
 - **Por qué funciona:** la miniatura con una montaña de oro brillando en una cueva vende sola, y el oro queda espectacular con muy poco esfuerzo (material metálico + bloom).
 - **Por qué es barata:** una cueva, monedas, gemas, unos 12 modelos de tesoro y un dragón que solo respira.
-- **Por qué encaja con lo que te gusta:** las monedas son literalmente el contador incremental, hay automatización ligera y los kobolds ayudantes trabajan mientras estás AFK.
+- **Por qué encaja con lo que te gusta:** las monedas son literalmente el contador incremental, hay automatización ligera y puedes contratar kobolds que trabajan contigo para avanzar más rápido.
 
 ### 4.2 Dos bucles: uno incremental y otro de ordenar
 
@@ -118,11 +158,12 @@ La moneda de compra es **la paga del dragón**: 1 moneda por cada 100 ordenadas.
 | Raíles de vagoneta | Las bolsas van solas a la cámara acorazada |
 | **Kobolds ayudantes** | Palean y le dan a la manivela por ti (automatización y AFK) |
 
-### 4.5 Automatización y AFK (ligeros)
+### 4.5 Automatización y ayudantes (ligeros)
 
 - La **clasificadora** es la única "fábrica": entra mezcla y salen bolsas separadas.
-- Los **kobolds ayudantes** son una máquina de estados muy simple (ir a la montaña, ir a la clasificadora, ir a la cámara acorazada) sobre un navmesh precocinado.
-- **Progreso offline:** con el juego cerrado, los ayudantes siguen ordenando monedas (como mucho 8 h). Al volver, una carta dice *"Mientras dormías, tus kobolds ordenaron 12.400 monedas"*.
+- **Mejoras de automatización:** la *rueda de hámster* hace girar la clasificadora sola y el *tobogán* lleva las cubetas a las torres.
+- Los **kobolds contratados** son gente que trabaja contigo: palean de la montaña a la tolva mientras haces otras cosas. Son una máquina de estados muy simple (ir a la montaña, ir a la tolva) y la lleva el host.
+- **Sin progreso offline:** con el juego cerrado no avanza nada. Si lo dejas abierto, los kobolds siguen trabajando porque están en la partida, igual que las máquinas.
 - Los tesoros siempre se colocan a mano, porque ese es el placer del género.
 
 ### 4.6 Coop (1–4 jugadores)
@@ -171,7 +212,7 @@ Al llegar al 100 % el dragón se despierta, mira su tesoro perfectamente ordenad
 
 | Fase | Contenido | Pregunta que responde |
 |---|---|---|
-| **0. Prototipo (2–3 semanas)** | Cueva en *greybox*, una montaña, pala, clasificadora con manivela, 3 torres, 10 tesoros con hueco y **2 jugadores en red** | ¿Es satisfactorio palear, darle a la manivela y colocar? ¿Hace gracia el coop? |
+| **0. Prototipo** ✅ montado en [`/game`](../game/README.md) | Cueva en *greybox*, montaña, pala, clasificadora con manivela, 3 torres, 12 tesoros con hueco, 7 mejoras, kobolds contratados, medidor de ruido y **coop de hasta 4 jugadores en red** | ¿Es satisfactorio palear, darle a la manivela y colocar? ¿Hace gracia el coop? |
 | **1. Vertical slice** | Arte final de una sala, mejoras, medidor de ruido, guardado | ¿Engancha durante una hora? |
 | **2. Página de Steam** | En cuanto haya un GIF bueno (la montaña de oro convirtiéndose en torres ordenadas) | ¿Hay wishlists? |
 | **3. Demo + Steam Next Fest** | La primera sala completa | ¿La demo convierte? |
@@ -180,8 +221,8 @@ Al llegar al 100 % el dragón se despierta, mira su tesoro perfectamente ordenad
 
 ### Stack técnico
 
-- **Motor:** el que conozcáis. Si no conocéis ninguno, **Godot 4 + GodotSteam** (gratis, ligero, `MultiMesh` para las torres de monedas) o **Unity + Facepunch.Steamworks**.
-- **Red:** lobbies y P2P de Steam, host autoritativo, sincronizando **cambios de estado** (no física).
+- **Motor:** **Godot 4.7** (decidido, ver 0.1), con **GodotSteam** para Steam más adelante.
+- **Red:** en el prototipo se usa ENet por IP para probar en local. En el juego final, lobbies y P2P de Steam. En los dos casos el host es autoritativo y se sincronizan **cambios de estado** (no física).
 - **Guardado:** lista de estados de objetos + contadores, en JSON con Steam Cloud.
 
 ---
@@ -210,10 +251,11 @@ Las cifras son estimaciones. **El gasto que más merece la pena es la cápsula**
 
 ## 9. Preguntas abiertas
 
-1. **¿Dragón o calcetines?** (o alguna otra de la tabla)
-2. **Equipo:** ¿cuántos sois y con qué motor tenéis experiencia?
-3. **Nombre:** ¿usar la coletilla *"Tidy Up the …!"* del género? Ayuda a que Steam lo asocie y lo recomiende junto a los demás, pero puede verse como subirse al carro. Hay que comprobar disponibilidad.
-4. **Jugadores:** ¿hasta 4, o hasta 5 como Brick by Brick?
+Resueltas: dragón, Godot, nombre provisional y sin progreso offline (sección 0).
+
+1. **¿Dragón pese a Folded Fables, o las mismas mecánicas con otro tema** (p. ej. kraken y cangrejos)? Ver 0.2.
+2. **Jugadores:** el prototipo admite 4. ¿Subir a 5 como Brick by Brick?
+3. **Tras probar el prototipo:** ¿qué parte es divertida y cuál sobra?
 
 ---
 
@@ -224,4 +266,6 @@ Las cifras son estimaciones. **El gasto que más merece la pena es la cápsula**
 - [Brick by Brick: Tidy Up the Small Town! en Steam](https://store.steampowered.com/app/5228920/Brick_by_Brick_Tidy_Up_the_Small_Town/)
 - [Brick by Brick llega a 40.000 wishlists en 3 días (Inven Global)](https://www.invenglobal.com/articles/27061/brick-by-brick-reaches-40000-wishlists-in-3-days)
 - [Brick by Brick sale en Steam el 15 de octubre (Inven Global)](https://www.invenglobal.com/articles/27186/brick-by-brick-set-to-launch-on-steam-on-october-15)
+- [Análisis de Folded Fables: Tidy Up the Dragon Hoard (KeenGamer)](https://www.keengamer.com/articles/reviews/pc-reviews/folded-fables-tidy-up-the-dragon-hoard-review-doesnt-fall-flat/)
+- [Bundle Shelve the Potions! × Folded Fables (Deku Deals)](https://www.dekudeals.com/items/shelve-the-potions-x-folded-fables-tidy-up-the-dragon-hoard-bundle)
 - Referencias de Moon Sweepers en [`concepto-inicial.md`](concepto-inicial.md#referencias)

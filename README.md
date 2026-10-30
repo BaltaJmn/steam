@@ -1,6 +1,9 @@
-# Juego para Steam (sin nombre todavía)
+# Kobold Keepers (nombre provisional)
 
-Juego coop, simple e incremental para Steam, en el estilo "Tidy Up" (Librarian, Brick by Brick, Moon Sweepers).
+> Ordena el tesoro. No despiertes al dragón.
 
-- 📄 [**Ideas "Tidy Up"**: dirección actual (juegos súper simples, coop y coste mínimo)](docs/ideas-tidy-up.md)
+Juego coop (1–4), simple e incremental para Steam, en el estilo "tidy up" (Librarian, Brick by Brick, Moon Sweepers): sois kobolds que ordenan la montaña de oro de un dragón dormido, con mejoras, máquinas y kobolds contratados, y sin hacer ruido.
+
+- 🎮 [**Prototipo jugable (Godot 4.7)**](game/README.md): cómo abrirlo, probar el coop y qué tocar
+- 📄 [**Diseño**: dirección actual y decisiones tomadas](docs/ideas-tidy-up.md)
 - 📄 [Concepto inicial: *Pull the Plug*, vaciar un océano (aparcado por tamaño)](docs/concepto-inicial.md)

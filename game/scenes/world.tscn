@@ -1,0 +1,159 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/world.gd" id="1_world"]
+[ext_resource type="Script" path="res://scripts/cave.gd" id="2_cave"]
+[ext_resource type="PackedScene" path="res://scenes/sleeper.tscn" id="3_sleeper"]
+[ext_resource type="PackedScene" path="res://scenes/pile.tscn" id="4_pile"]
+[ext_resource type="PackedScene" path="res://scenes/sorter.tscn" id="5_sorter"]
+[ext_resource type="PackedScene" path="res://scenes/stack.tscn" id="6_stack"]
+[ext_resource type="PackedScene" path="res://scenes/shelf.tscn" id="7_shelf"]
+[ext_resource type="PackedScene" path="res://scenes/item.tscn" id="8_item"]
+[ext_resource type="PackedScene" path="res://scenes/upgrade_board.tscn" id="9_board"]
+[ext_resource type="PackedScene" path="res://scenes/hud.tscn" id="10_hud"]
+
+[node name="World" type="Node3D"]
+script = ExtResource("1_world")
+
+[node name="Cave" type="Node3D" parent="."]
+script = ExtResource("2_cave")
+
+[node name="Sleeper" parent="." instance=ExtResource("3_sleeper")]
+position = Vector3(0, 0, -12)
+
+[node name="Pile" parent="." instance=ExtResource("4_pile")]
+position = Vector3(0, 0, -6)
+
+[node name="Sorter" parent="." instance=ExtResource("5_sorter")]
+position = Vector3(0, 0, 3)
+
+[node name="Vault" type="Node3D" parent="."]
+
+[node name="CopperStack" parent="Vault" instance=ExtResource("6_stack")]
+position = Vector3(-5, 0, 10)
+kind = "copper"
+
+[node name="SilverStack" parent="Vault" instance=ExtResource("6_stack")]
+position = Vector3(0, 0, 10.5)
+kind = "silver"
+
+[node name="GoldStack" parent="Vault" instance=ExtResource("6_stack")]
+position = Vector3(5, 0, 10)
+kind = "gold"
+
+[node name="Shelves" type="Node3D" parent="."]
+
+[node name="Crowns" parent="Shelves" instance=ExtResource("7_shelf")]
+position = Vector3(15.2, 0, -6)
+rotation = Vector3(0, -1.5708, 0)
+title = "Coronas"
+first_slot_id = 1
+slot_types = PackedStringArray("crown_gold", "crown_gold", "crown_silver")
+
+[node name="Chalices" parent="Shelves" instance=ExtResource("7_shelf")]
+position = Vector3(15.2, 0, 0)
+rotation = Vector3(0, -1.5708, 0)
+title = "Cálices"
+first_slot_id = 4
+slot_types = PackedStringArray("chalice_gold", "chalice_gold", "chalice_silver")
+
+[node name="Swords" parent="Shelves" instance=ExtResource("7_shelf")]
+position = Vector3(15.2, 0, 6)
+rotation = Vector3(0, -1.5708, 0)
+title = "Espadas"
+first_slot_id = 7
+slot_types = PackedStringArray("sword_gold", "sword_silver")
+
+[node name="Gems" parent="Shelves" instance=ExtResource("7_shelf")]
+position = Vector3(-15.2, 0, 0)
+rotation = Vector3(0, 1.5708, 0)
+title = "Gemas"
+first_slot_id = 9
+slot_types = PackedStringArray("gem_red", "gem_red", "gem_blue", "gem_green")
+
+[node name="Items" type="Node3D" parent="."]
+
+[node name="Item1" parent="Items" instance=ExtResource("8_item")]
+position = Vector3(-4.5, 0, -2.5)
+item_id = 1
+type_key = "crown_gold"
+
+[node name="Item2" parent="Items" instance=ExtResource("8_item")]
+position = Vector3(4.2, 0, -3)
+item_id = 2
+type_key = "crown_gold"
+
+[node name="Item3" parent="Items" instance=ExtResource("8_item")]
+position = Vector3(-9, 0, -9)
+item_id = 3
+type_key = "crown_silver"
+
+[node name="Item4" parent="Items" instance=ExtResource("8_item")]
+position = Vector3(5.5, 0, -7)
+item_id = 4
+type_key = "chalice_gold"
+
+[node name="Item5" parent="Items" instance=ExtResource("8_item")]
+position = Vector3(-6, 0, 2)
+item_id = 5
+type_key = "chalice_gold"
+
+[node name="Item6" parent="Items" instance=ExtResource("8_item")]
+position = Vector3(11, 0, -10)
+item_id = 6
+type_key = "chalice_silver"
+
+[node name="Item7" parent="Items" instance=ExtResource("8_item")]
+position = Vector3(-3, 0, 0.5)
+rotation = Vector3(0, 0.8, 0)
+item_id = 7
+type_key = "sword_gold"
+
+[node name="Item8" parent="Items" instance=ExtResource("8_item")]
+position = Vector3(8, 0, 3)
+rotation = Vector3(0, -0.5, 0)
+item_id = 8
+type_key = "sword_silver"
+
+[node name="Item9" parent="Items" instance=ExtResource("8_item")]
+position = Vector3(-12, 0, 7)
+item_id = 9
+type_key = "gem_red"
+
+[node name="Item10" parent="Items" instance=ExtResource("8_item")]
+position = Vector3(7, 0, -11)
+item_id = 10
+type_key = "gem_red"
+
+[node name="Item11" parent="Items" instance=ExtResource("8_item")]
+position = Vector3(-9.5, 0, -12)
+item_id = 11
+type_key = "gem_blue"
+
+[node name="Item12" parent="Items" instance=ExtResource("8_item")]
+position = Vector3(12, 0, 8)
+item_id = 12
+type_key = "gem_green"
+
+[node name="UpgradeBoard" parent="." instance=ExtResource("9_board")]
+position = Vector3(9, 0, 12)
+rotation = Vector3(0, 3.14159, 0)
+
+[node name="SpawnPoints" type="Node3D" parent="."]
+
+[node name="Spawn1" type="Marker3D" parent="SpawnPoints"]
+position = Vector3(7, 0.1, 10.5)
+
+[node name="Spawn2" type="Marker3D" parent="SpawnPoints"]
+position = Vector3(9, 0.1, 10.5)
+
+[node name="Spawn3" type="Marker3D" parent="SpawnPoints"]
+position = Vector3(11, 0.1, 10.5)
+
+[node name="Spawn4" type="Marker3D" parent="SpawnPoints"]
+position = Vector3(9, 0.1, 9)
+
+[node name="Players" type="Node3D" parent="."]
+
+[node name="Workers" type="Node3D" parent="."]
+
+[node name="HUD" parent="." instance=ExtResource("10_hud")]
