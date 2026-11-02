@@ -14,7 +14,8 @@ var _multimesh: MultiMesh
 var _layout := []  # [[color, Transform3D], ...] ordenado de abajo arriba
 var _layout_counts := {}  # cuántas piezas de cada color caben en el reparto actual
 var _last_scoop := 0.0
-var _glint: MeshInstance3D
+var _fireflies: Array[MeshInstance3D] = []
+var _firefly_level := 0
 var _time := 0.0
 
 
@@ -38,12 +39,14 @@ func _ready() -> void:
 	collision.position = Vector3(0, 0.125, 0)
 	area.add_child(collision)
 	add_child(area)
-	# Brillito de la mejora "Lupa": delata los grupitos que quedan.
-	var spark := SphereMesh.new()
-	spark.radius = 0.025
-	spark.height = 0.05
-	_glint = Visuals.mesh_instance(self, spark, Vector3(0, 0.45, 0), "glint")
-	_glint.visible = false
+	# Luciérnagas de la tienda: revolotean sobre los grupitos que quedan.
+	for i in 2:
+		var bug := SphereMesh.new()
+		bug.radius = 0.022
+		bug.height = 0.044
+		var firefly := Visuals.mesh_instance(self, bug, Vector3(0, 0.45, 0), "firefly")
+		firefly.visible = false
+		_fireflies.append(firefly)
 	if Engine.is_editor_hint():
 		var preview := {}
 		for i in EDITOR_PREVIEW:
@@ -103,11 +106,15 @@ func _show(counts: Dictionary) -> void:
 
 
 func _process(delta: float) -> void:
-	if Engine.is_editor_hint() or not _glint.visible:
+	if Engine.is_editor_hint() or _firefly_level == 0:
 		return
+	# Vuelan en círculo; con el nivel 2 suben más para verse desde lejos.
 	_time += delta
-	_glint.position.y = 0.45 + sin(_time * 2.0 + float(pile_id)) * 0.05
-	_glint.scale = Vector3.ONE * (0.7 + 0.5 * absf(sin(_time * 2.5 + float(pile_id))))
+	var height := 0.45 if _firefly_level == 1 else 1.1
+	for i in _fireflies.size():
+		var angle := _time * 1.6 + float(i) * PI + float(pile_id)
+		_fireflies[i].position = Vector3(cos(angle) * 0.18, height + sin(_time * 2.3 + float(i)) * 0.08, sin(angle) * 0.18)
+		_fireflies[i].scale = Vector3.ONE * (0.7 + 0.5 * absf(sin(_time * 3.0 + float(i) + float(pile_id))))
 
 
 func _on_changed(what: String, id: int) -> void:
@@ -131,7 +138,9 @@ func _refresh() -> void:
 	if grown:
 		_build_layout(wanted)
 	_show(counts)
-	_glint.visible = Game.upgrade_level("lens") > 0 and Game.piece_sum(counts) > 0
+	_firefly_level = Game.upgrade_level("fireflies") if Game.piece_sum(counts) > 0 else 0
+	for i in _fireflies.size():
+		_fireflies[i].visible = _firefly_level > i
 
 
 func get_prompt(_player: Node, _part: String) -> String:

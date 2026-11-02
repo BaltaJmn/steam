@@ -38,7 +38,8 @@ Para jugar con un amigo por internet en el prototipo, el host tiene que abrir el
 Grupitos de piezas por el suelo ──[E recoger]──► cesta con piezas de varios colores
    ──► cualquier mesa [E]: su clasificador se queda solo lo que necesita ──► los bloques aparecen en su sitio
 Piezas especiales (ojos, puerta, manzana, bandera, ventanilla, con un brillito) ──[E coger]──► mira su mesa y E
-Pegatinas ──► tablón de MEJORAS (compartidas): cesta, puñados, zapatillas, lupa, ayudantes de cuerda
+Pegatinas ──► TIENDA de cositas monas (compartidas): cesta de gatito, manoplas de osito, zapatillas de conejito,
+             luciérnagas, globitos, perrito rastreador, pollitos de cuerda
 ```
 
 **Objetivo:** montar las 10 figuras (280 piezas + 9 piezas especiales). Mira también debajo de las mesas. El clasificador de cada mesa enseña, por colores, cuántas piezas lleva y cuántas necesita.
@@ -48,7 +49,8 @@ Pegatinas ──► tablón de MEJORAS (compartidas): cesta, puñados, zapatilla
 | Quiero cambiar... | Archivo |
 |---|---|
 | **Las figuras** (forma, colores, piezas especiales) | `scripts/figure_data.gd`: cada figura son capas de caracteres, fáciles de editar |
-| Números (precios, velocidades, cuántas piezas se cogen...) | `scripts/balance.gd` |
+| Números y la tienda (precios, qué hace cada cosita, velocidades...) | `scripts/balance.gd` |
+| El perrito rastreador | `scripts/puppy.gd` |
 | Dónde está cada cosa (mesas, piezas especiales, tablón) | `scenes/world.tscn` (ábrelo en el editor y mueve los nodos) |
 | Cuántos grupitos de piezas hay y por dónde | `scripts/floor_scatter.gd` (y su nodo `FloorScatter` en `world.tscn`) |
 | Colores, materiales y el bloque con pivotes | `scripts/visuals.gd` |

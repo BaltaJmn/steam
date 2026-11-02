@@ -129,7 +129,7 @@ func _build_upgrades_panel(root: Control) -> void:
 	_place(_upgrades_panel, 0.5, 0.5, 0.5, 0.5, -360, -280, 360, 280)
 	var box := _margin_box(_upgrades_panel)
 	var title := _label(box, 30)
-	title.text = "Mejoras del grupo"
+	title.text = "tienda de cositas monas"
 	_wallet_label = _label(box, 22)
 	_upgrades_list = VBoxContainer.new()
 	_upgrades_list.add_theme_constant_override("separation", 8)
@@ -337,7 +337,7 @@ func _refresh_upgrades() -> void:
 	if str(Game.upgrades) != _shown_levels:
 		_rebuild_upgrades()
 		return
-	_wallet_label.text = "Pegatinas disponibles: %d" % Game.wallet
+	_wallet_label.text = "tienes %d pegatinas · todo es para todo el grupo" % Game.wallet
 	for id in _upgrade_buttons:
 		var cost: int = Game.upgrade_cost(id)
 		var button: Button = _upgrade_buttons[id]
@@ -350,7 +350,7 @@ func _rebuild_upgrades() -> void:
 		child.queue_free()
 	_upgrade_buttons.clear()
 	_shown_levels = str(Game.upgrades)
-	_wallet_label.text = "Pegatinas disponibles: %d" % Game.wallet
+	_wallet_label.text = "tienes %d pegatinas · todo es para todo el grupo" % Game.wallet
 	for id in Balance.UPGRADE_ORDER:
 		var definition: Dictionary = Balance.UPGRADES[id]
 		var costs: Array = definition["costs"]
@@ -365,10 +365,10 @@ func _rebuild_upgrades() -> void:
 		button.custom_minimum_size = Vector2(170, 0)
 		var cost: int = Game.upgrade_cost(id)
 		if cost < 0:
-			button.text = "Al máximo"
+			button.text = "¡ya lo tienes!"
 			button.disabled = true
 		else:
-			button.text = "Comprar (%d)" % cost
+			button.text = "%d pegatinas" % cost
 			button.disabled = Game.wallet < cost
 			button.pressed.connect(Game.request.bind("_srv_buy", [id]))
 		_upgrade_buttons[id] = button

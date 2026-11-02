@@ -37,6 +37,12 @@ const COLORS := {
 	"skin": Color(0.97, 0.86, 0.76),
 	"baseplate": Color(0.95, 0.92, 0.86),
 	"board": Color(0.95, 0.92, 0.86),
+	"pup": Color(0.95, 0.88, 0.76),
+	"pup_ear": Color(0.7, 0.55, 0.45),
+	"chick": Color(1.0, 0.88, 0.5),
+	"beak": Color(0.95, 0.65, 0.4),
+	"bunny": Color(0.99, 0.97, 0.95),
+	"bow": Color(0.95, 0.68, 0.72),
 }
 
 static var _materials := {}
@@ -70,6 +76,10 @@ static func mat(key: String) -> StandardMaterial3D:
 		"bulb":
 			m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 			m.albedo_color = Color(1.0, 0.9, 0.72)
+		"firefly":
+			# Luciérnaga: un puntito cálido que brilla un poco.
+			m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			m.albedo_color = Color(1.0, 0.93, 0.55)
 		"glint":
 			# Brillito que delata una pieza especial en el suelo.
 			m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED

@@ -8,8 +8,9 @@ const JUMP_VELOCITY := 4.0
 const MOUSE_SENSITIVITY := 0.0025
 const SYNC_INTERVAL := 0.05
 const NOISE_SEND_INTERVAL := 0.5
-# Cesta según el nivel de la mejora "Cesta más grande": [radio, alto, color].
-const BASKETS := [[0.2, 0.14, "cream"], [0.23, 0.16, "sky"], [0.26, 0.18, "mint"], [0.3, 0.2, "coral"]]
+# Cesta de gatito según su nivel: [radio, alto, color]. Desde el nivel 1 lleva
+# un lazo y en el último le salen orejitas de gato.
+const BASKETS := [[0.2, 0.14, "cream"], [0.22, 0.15, "rug_b"], [0.25, 0.16, "sky"], [0.28, 0.18, "pup"]]
 const BASKET_SHOWN := 12  # piezas que se dibujan dentro de la cesta como mucho
 
 var peer_id := 1
@@ -31,6 +32,7 @@ var _spawn_pos := Vector3.ZERO
 var _container: Node3D
 var _container_level := -1
 var _basket_pieces: MultiMesh
+var _slippers: Node3D
 var _last_load := {}
 var _burst: GPUParticles3D
 var _burst_mesh: BoxMesh
@@ -85,6 +87,22 @@ func _build_body() -> void:
 		eye.radius = 0.035
 		eye.height = 0.07
 		Visuals.mesh_instance(body, eye, Vector3(0.08 * side, 1.31, -0.22), "ink")
+	# Zapatillas de conejito (se ven cuando se compran).
+	_slippers = Node3D.new()
+	body.add_child(_slippers)
+	for side in [-1.0, 1.0]:
+		var slipper := SphereMesh.new()
+		slipper.radius = 0.09
+		slipper.height = 0.1
+		var slipper_instance := Visuals.mesh_instance(_slippers, slipper, Vector3(0.12 * side, 0.05, -0.05), "bunny")
+		slipper_instance.scale = Vector3(1.0, 1.0, 1.5)
+		for ear_side in [-1.0, 1.0]:
+			var ear := CapsuleMesh.new()
+			ear.radius = 0.018
+			ear.height = 0.12
+			var ear_instance := Visuals.mesh_instance(_slippers, ear, Vector3(0.12 * side + 0.025 * ear_side, 0.14, -0.1), "bunny")
+			ear_instance.rotation_degrees = Vector3(-15, 0, 12.0 * ear_side)
+	_slippers.visible = false
 	var name_label := Visuals.label(self, display_name, Vector3(0, 1.8, 0), 40, color.darkened(0.35))
 	# El jugador local no se ve a sí mismo (cámara en primera persona).
 	body.visible = not is_local
@@ -261,8 +279,9 @@ func _drop_position() -> Vector3:
 
 
 ## La cesta que llevas en la mano (crece con la mejora) y las piezas dentro,
-## con sus colores de verdad.
+## con sus colores de verdad. También enseña las zapatillas de conejito.
 func _update_sack() -> void:
+	_slippers.visible = Game.upgrade_level("speed") > 0
 	var level := Game.upgrade_level("sack")
 	if level != _container_level:
 		_build_container(level)
@@ -299,6 +318,20 @@ func _build_container(level: int) -> void:
 	basket_material.cull_mode = BaseMaterial3D.CULL_DISABLED
 	basket.material = basket_material
 	Visuals.mesh_instance(_container, basket, Vector3(0, height / 2.0, 0))
+	if level >= 1:
+		# Lazo delante de la cesta.
+		for side in [-1.0, 1.0]:
+			var loop := SphereMesh.new()
+			loop.radius = 0.035
+			loop.height = 0.05
+			var loop_instance := Visuals.mesh_instance(_container, loop, Vector3(0.04 * side, height * 0.7, -radius - 0.01), "bow")
+			loop_instance.scale = Vector3(1.3, 1.0, 0.6)
+	if level >= 3:
+		# Orejitas de gato en el borde.
+		for side in [-1.0, 1.0]:
+			var ear := PrismMesh.new()
+			ear.size = Vector3(0.08, 0.07, 0.02)
+			Visuals.mesh_instance(_container, ear, Vector3(radius * 0.6 * side, height + 0.035, 0), "pup")
 	# Piezas dentro de la cesta (algo más pequeñas), en capas de 2x2.
 	_basket_pieces = Visuals.brick_multimesh(BASKET_SHOWN)
 	var piece_scale := 0.7

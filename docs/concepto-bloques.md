@@ -32,12 +32,17 @@ Figura terminada ──► confeti y pegatinas extra ──► mejoras
 - **Clasificador en cada mesa:** delante de cada figura hay una bandeja con un compartimento por cada color que necesita. Cada compartimento tiene el fondo de su color, se va llenando de piezas y lleva su contador ("12/26"). De un vistazo se ve qué le falta a cada mesa.
 - **Entregar:** llegas a una mesa con la cesta y pulsas E. Se queda solo con lo que necesita y lo demás sigue en tu cesta para otra mesa. La interfaz te dice qué colores llevas.
 - **Construir:** los bloques aparecen en su sitio sobre la silueta transparente, de abajo arriba.
-- **Mejoras (con pegatinas), pensadas para buscar:**
-  - cesta más grande;
-  - recoger a puñados;
-  - zapatillas cómodas (andas más rápido);
-  - lupa (los grupitos que quedan brillan);
-  - ayudantes de cuerda que recogen piezas y las llevan a las mesas que las necesitan.
+- **Tienda de cositas monas (con pegatinas):** todas son cosas tiernas que ayudan a buscar.
+
+  | Cosita | Qué hace |
+  |---|---|
+  | Cesta de gatito | Llevas más piezas. Le sale un lazo y, al final, orejitas de gato |
+  | Manoplas de osito | Coges más piezas de cada vez |
+  | Zapatillas de conejito | Andas más rápido. Los demás ven las orejitas en tus pies |
+  | Luciérnagas | Revolotean sobre los grupitos que quedan. En el nivel 2 vuelan más alto, para verlas desde lejos |
+  | Globitos | Cada pieza especial perdida lleva un globo atado: se ve aunque esté debajo de una mesa |
+  | Perrito rastreador | Te acompaña, corre hasta el grupito más cercano, se sienta, mueve la cola y dice "¡guau!" |
+  | Pollitos de cuerda | Recogen piezas y las llevan a las mesas que las necesitan |
 - **Coop (1–4):** todo es compartido. Cada uno puede encargarse de una zona de la habitación o de unas mesas.
 
 ### Las 10 figuras

@@ -1,6 +1,7 @@
 @tool
 extends Node3D
-## Tablón de mejoras colgado en la pared. Son de todo el grupo (compartidas).
+## Tienda de cositas monas, colgada en la pared. Lo que se compra es de todo el
+## grupo (compartido) y ayuda a buscar piezas.
 ## La parte de delante mira hacia +Z; el nodo va a ras de suelo, pegado a la pared.
 
 const CENTER_Y := 1.45
@@ -16,15 +17,15 @@ func _ready() -> void:
 		self, Vector3(1.4, 0.9, 0.3), Vector3(0, CENTER_Y, 0.15),
 		Visuals.LAYER_WORLD | Visuals.LAYER_INTERACT
 	)
-	Visuals.label(self, "mejoras", Vector3(0, CENTER_Y + 0.12, 0.06), 72, Color(0.35, 0.31, 0.33), false)
-	Visuals.label(self, "para todo el grupo", Vector3(0, CENTER_Y - 0.15, 0.06), 32, Color(0.5, 0.45, 0.45), false)
+	Visuals.label(self, "tienda", Vector3(0, CENTER_Y + 0.12, 0.06), 72, Color(0.35, 0.31, 0.33), false)
+	Visuals.label(self, "cositas monas para buscar", Vector3(0, CENTER_Y - 0.15, 0.06), 32, Color(0.5, 0.45, 0.45), false)
 	if Engine.is_editor_hint():
 		return
 	add_to_group("upgrade_board")
 
 
 func get_prompt(_player: Node, _part: String) -> String:
-	return "[E] Tablón de mejoras · pegatinas: %d" % Game.wallet
+	return "[E] Tienda de cositas monas · tienes %d pegatinas" % Game.wallet
 
 
 func interact(_player: Node, _part: String) -> void:

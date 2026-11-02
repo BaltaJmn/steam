@@ -33,35 +33,47 @@ const NOISE_LAND := 7.0
 const NOISE_LAND_MIN_SPEED := 3.0
 const NOISE_DROP := 8.0
 
-# --- Ayudantes contratados ---
-# Muñequitos de cuerda: recogen piezas del suelo y las llevan a las mesas.
+# --- Pollitos de cuerda (ayudantes) ---
+# Recogen piezas del suelo y las llevan a las mesas que las necesitan.
 const WORKER_CAPACITY := 4
 const WORKER_SPEED := 1.4
 const WORKER_SCOOP_TIME := 1.2
 const WORKER_PLACE_TIME := 0.6
 
-# --- Mejoras (compartidas por todo el grupo) ---
-# "values" tiene un valor más que "costs": el del nivel 0.
-const UPGRADE_ORDER := ["sack", "shovel", "speed", "lens", "workers"]
+# --- Perrito rastreador ---
+const PUPPY_SPEED := 3.5
+
+# --- Tienda de cositas monas (compartidas por todo el grupo) ---
+# Todas ayudan a buscar piezas. "values" tiene un valor más que "costs": el
+# del nivel 0.
+const UPGRADE_ORDER := ["sack", "shovel", "speed", "fireflies", "balloons", "puppy", "workers"]
 const UPGRADES := {
 	"sack": {
-		"name": "Cesta más grande", "desc": "Llevas más piezas por viaje",
+		"name": "Cesta de gatito", "desc": "Llevas más piezas (y le sale un lazo, y luego orejitas)",
 		"costs": [6, 15, 30], "values": [6, 10, 16, 24],
 	},
 	"shovel": {
-		"name": "Recoger a puñados", "desc": "Coges más piezas de cada vez",
+		"name": "Manoplas de osito", "desc": "Coges más piezas de cada vez",
 		"costs": [5, 12, 25], "values": [2, 3, 5, 8],
 	},
 	"speed": {
-		"name": "Zapatillas cómodas", "desc": "Andas más rápido",
+		"name": "Zapatillas de conejito", "desc": "Andas más rápido y dando saltitos",
 		"costs": [8, 20], "values": [1.0, 1.15, 1.3],
 	},
-	"lens": {
-		"name": "Lupa", "desc": "Los grupitos de piezas que quedan brillan un poco",
-		"costs": [12], "values": [0, 1],
+	"fireflies": {
+		"name": "Luciérnagas", "desc": "Revolotean sobre los grupitos de piezas que quedan",
+		"costs": [10, 20], "values": [0, 1, 2],
+	},
+	"balloons": {
+		"name": "Globitos", "desc": "Cada pieza especial perdida lleva un globo atado",
+		"costs": [15], "values": [0, 1],
+	},
+	"puppy": {
+		"name": "Perrito rastreador", "desc": "Corre hasta el grupito más cercano y te espera allí",
+		"costs": [20], "values": [0, 1],
 	},
 	"workers": {
-		"name": "Ayudante de cuerda", "desc": "Recoge piezas y las lleva a las mesas que las necesitan",
+		"name": "Pollitos de cuerda", "desc": "Recogen piezas y las llevan a las mesas",
 		"costs": [12, 25, 40], "values": [0, 1, 2, 3],
 	},
 }

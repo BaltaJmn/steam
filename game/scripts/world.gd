@@ -5,6 +5,7 @@ extends Node3D
 
 const PLAYER_SCENE := preload("res://scenes/player.tscn")
 const WORKER_SCENE := preload("res://scenes/worker.tscn")
+const PUPPY_SCRIPT := preload("res://scripts/puppy.gd")
 
 @onready var players_root: Node3D = $Players
 @onready var workers_root: Node3D = $Workers
@@ -22,6 +23,8 @@ func _ready() -> void:
 	Game.request("_srv_hello", [Network.player_name])
 	_sync_players()
 	_sync_workers()
+	# El perrito rastreador de este jugador (solo aparece si se compra).
+	add_child(PUPPY_SCRIPT.new())
 
 
 func return_to_menu(message := "") -> void:

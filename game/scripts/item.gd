@@ -9,6 +9,7 @@ extends Node3D
 var _mesh: MeshInstance3D
 var _area: Area3D
 var _glint: MeshInstance3D
+var _balloon: Node3D
 var _time := 0.0
 var _state := "loose"
 var _holder := 0
@@ -40,6 +41,19 @@ func _build() -> void:
 	spark.radius = 0.02
 	spark.height = 0.04
 	_glint = Visuals.mesh_instance(self, spark, Vector3(0, 0.25, 0), "glint")
+	# Globito de la tienda, atado a la pieza (de un color distinto cada una).
+	_balloon = Node3D.new()
+	add_child(_balloon)
+	var string := CylinderMesh.new()
+	string.top_radius = 0.003
+	string.bottom_radius = 0.003
+	string.height = 1.3
+	Visuals.mesh_instance(_balloon, string, Vector3(0, 0.7, 0), "ink")
+	var ball := SphereMesh.new()
+	ball.radius = 0.11
+	ball.height = 0.26
+	Visuals.mesh_instance(_balloon, ball, Vector3(0, 1.45, 0), Balance.KINDS[item_id % Balance.KINDS.size()])
+	_balloon.visible = false
 	_set_pose(false)
 
 
@@ -51,7 +65,7 @@ func _set_pose(_upright: bool) -> void:
 
 
 func _on_changed(what: String, id: int) -> void:
-	if what == "all" or (what == "item" and id == item_id):
+	if what == "all" or what == "economy" or (what == "item" and id == item_id):
 		_refresh()
 
 
@@ -63,6 +77,7 @@ func _refresh() -> void:
 	_holder = int(data["holder"])
 	_area.collision_layer = Visuals.LAYER_INTERACT if _state == "loose" else 0
 	_glint.visible = _state == "loose"
+	_balloon.visible = _state == "loose" and Game.upgrade_level("balloons") > 0
 	match _state:
 		"loose":
 			global_position = data["pos"]
@@ -86,6 +101,7 @@ func _process(delta: float) -> void:
 		_time += delta
 		_glint.position.y = 0.25 + sin(_time * 2.0) * 0.04
 		_glint.scale = Vector3.ONE * (0.7 + 0.5 * absf(sin(_time * 3.0 + float(item_id))))
+		_balloon.rotation.z = sin(_time * 1.3 + float(item_id)) * 0.06
 		return
 	if _state != "held":
 		return
