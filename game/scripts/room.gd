@@ -108,7 +108,10 @@ func _build_window() -> void:
 	var window_height := WINDOW_TOP - WINDOW_BOTTOM
 	var center_y := (WINDOW_BOTTOM + WINDOW_TOP) / 2.0
 	var frame_x := -HALF_X - WALL / 2.0
-	Visuals.mesh_instance(self, Visuals.box_mesh(Vector3(0.02, window_height + 0.6, WINDOW_Z * 2.0 + 0.8)), Vector3(-HALF_X - WALL - 0.8, center_y, 0), "window_glow")
+	var sky := Visuals.mesh_instance(self, Visuals.box_mesh(Vector3(0.02, window_height + 0.6, WINDOW_Z * 2.0 + 0.8)), Vector3(-HALF_X - WALL - 0.8, center_y, 0), "window_glow")
+	sky.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF  # si no, tapa el sol
+	# Cristal invisible: que nadie se salga por la ventana.
+	Visuals.static_box(self, Vector3(WALL, window_height, WINDOW_Z * 2.0), Vector3(frame_x, center_y, 0), Visuals.LAYER_WORLD)
 	Visuals.mesh_instance(self, Visuals.box_mesh(Vector3(0.06, window_height, 0.06)), Vector3(frame_x, center_y, 0), "wall")
 	Visuals.mesh_instance(self, Visuals.box_mesh(Vector3(0.06, 0.06, WINDOW_Z * 2.0)), Vector3(frame_x, center_y, 0), "wall")
 	Visuals.mesh_instance(self, Visuals.box_mesh(Vector3(0.35, 0.05, WINDOW_Z * 2.0 + 0.2)), Vector3(-HALF_X + 0.05, WINDOW_BOTTOM, 0), "baseboard")
@@ -173,9 +176,9 @@ func _build_furniture() -> void:
 		var disc := CylinderMesh.new()
 		disc.top_radius = 1.0
 		disc.bottom_radius = 1.0
-		disc.height = 0.02
+		disc.height = 0.004
 		disc.radial_segments = 48
-		var instance := Visuals.mesh_instance(self, disc, Vector3(0, 0.01, rug[0]), rug[1])
+		var instance := Visuals.mesh_instance(self, disc, Vector3(0, 0.002, rug[0]), rug[1])
 		instance.scale = Vector3(8.0, 1.0, 1.7)
 	# Plantas
 	for pos in [Vector3(-8.2, 0, -6.2), Vector3(8.2, 0, 6.2), Vector3(-8.2, 0, 5.8)]:

@@ -27,11 +27,12 @@ func _build() -> void:
 	_area.collision_layer = Visuals.LAYER_INTERACT
 	_area.collision_mask = 0
 	_area.monitoring = false
+	var block := FigureData.BLOCK
 	var shape := BoxShape3D.new()
-	shape.size = Vector3(0.5, height + 0.25, 0.5)
+	shape.size = Vector3(block.x * 1.6, height + block.y, block.z * 1.6)
 	var collision := CollisionShape3D.new()
 	collision.shape = shape
-	collision.position = Vector3(0, (height + 0.25) / 2.0, 0)
+	collision.position = Vector3(0, (height + block.y) / 2.0, 0)
 	_area.add_child(collision)
 	add_child(_area)
 

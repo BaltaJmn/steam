@@ -601,7 +601,11 @@ func _on_peer_disconnected(id: int) -> void:
 		var pos: Vector3 = player_pos.get(id, Vector3.ZERO)
 		item["state"] = "loose"
 		item["holder"] = 0
-		item["pos"] = Vector3(pos.x, maxf(pos.y, 0.0), pos.z)
+		item["pos"] = Vector3(
+			clampf(pos.x, -Balance.ROOM_HALF_X, Balance.ROOM_HALF_X),
+			clampf(pos.y, 0.0, 5.0),
+			clampf(pos.z, -Balance.ROOM_HALF_Z, Balance.ROOM_HALF_Z)
+		)
 		_mark("item:%d" % item_id)
 	_srv_return_load(id)
 	players.erase(id)

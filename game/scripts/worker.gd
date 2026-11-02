@@ -28,7 +28,7 @@ func _ready() -> void:
 		eye.height = 0.056
 		Visuals.mesh_instance(_body, eye, Vector3(0.06 * side, 0.93, -0.16), "ink")
 	# Llave de cuerda en la espalda y una pieza en brazos cuando lleva carga.
-	var key := Visuals.mesh_instance(_body, Visuals.box_mesh(Vector3(0.04, 0.2, 0.25)), Vector3(0, 0.5, 0.28), "metal")
+	Visuals.mesh_instance(_body, Visuals.box_mesh(Vector3(0.04, 0.2, 0.25)), Vector3(0, 0.5, 0.28), "metal")
 	_load = Visuals.mesh_instance(_body, Visuals.brick_mesh(), Vector3(0, 0.5, -0.32), "coral")
 	_load.scale = Vector3.ONE * 1.4
 	_load.visible = false
