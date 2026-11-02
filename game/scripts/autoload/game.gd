@@ -15,29 +15,28 @@ const REQUESTS := [
 	"_srv_noise",
 ]
 const PLAYER_COLORS := [
-	Color(0.4, 0.8, 0.35), Color(0.35, 0.6, 1.0), Color(1.0, 0.6, 0.25), Color(0.9, 0.45, 0.9),
+	Color(0.96, 0.6, 0.55), Color(0.55, 0.72, 0.95), Color(0.6, 0.82, 0.62), Color(0.98, 0.82, 0.45),
 ]
 const NET_INTERVAL := 0.1
 
 # --- Estado sincronizado (lo manda el host) ---
-var pile := {}
-var pile_start := {}
-var hopper := {}
-var bins := {}
-var stacks := {}
+var piles := {}  # id del montón -> {color: piezas}
+var hopper := {}  # {color: piezas} en la tolva
+var bins := {}  # {color: piezas} ya clasificadas
+var figures := {}  # id -> {model, need: {color: n}, have: {color: n}, done}
 var items := {}  # id -> {type, state: "loose"/"held"/"placed", pos, yaw, holder, slot}
-var slots := {}  # id -> {type, pos, yaw, item}
+var slots := {}  # id -> {type, pos, yaw, item, figure}
 var players := {}  # peer_id -> {name, color, spawn, load_kind, load, item}
-var wallet := 0
+var wallet := 0  # pegatinas
 var upgrades := {}
 var noise := 0.0
-var workers_net := []  # [[posición, lleva_migas], ...]
+var workers_net := []  # [[posición, lleva_piezas], ...]
 var completed := false
 
 # --- Solo local ---
 var player_nodes := {}  # peer_id -> nodo Player
 var player_pos := {}  # peer_id -> última posición conocida
-var anchors := {}  # puntos del mapa que usan las hormigas y papá
+var anchors := {}  # puntos del mapa que usan los ayudantes (montones, tolva...)
 
 # --- Solo en el host ---
 var _world_ready := false
@@ -46,7 +45,6 @@ var _dirty := {}
 var _workers := []
 var _player_noise := {}
 var _last_action := {}
-var _pay_remainder := 0
 var _wheel_acc := 0.0
 var _chute_acc := 0.0
 var _net_timer := 0.0
@@ -60,11 +58,10 @@ func _ready() -> void:
 
 
 func reset() -> void:
-	pile = _zero_crumbs()
-	pile_start = _zero_crumbs()
-	hopper = _zero_crumbs()
-	bins = _zero_crumbs()
-	stacks = _zero_crumbs()
+	piles = {}
+	hopper = _zero_pieces()
+	bins = _zero_pieces()
+	figures = {}
 	items = {}
 	slots = {}
 	players = {}
@@ -84,7 +81,6 @@ func reset() -> void:
 	_workers = []
 	_player_noise = {}
 	_last_action = {}
-	_pay_remainder = 0
 	_wheel_acc = 0.0
 	_chute_acc = 0.0
 	_net_timer = 0.0
@@ -92,13 +88,26 @@ func reset() -> void:
 	_join_count = 0
 
 
-## El host lo llama al cargar el mundo, con lo que hay colocado en la escena.
-func server_setup(world_items: Dictionary, world_slots: Dictionary) -> void:
-	for kind in Balance.KINDS:
-		pile[kind] = int(Balance.PILE_START[kind])
-		pile_start[kind] = int(Balance.PILE_START[kind])
+## El host lo llama al cargar el mundo con lo que hay colocado en la escena.
+## Las piezas del suelo son justo las que piden las figuras, repartidas entre
+## los montones.
+func server_setup(world_figures: Dictionary, pile_ids: Array, world_items: Dictionary, world_slots: Dictionary) -> void:
+	figures = world_figures
 	items = world_items
 	slots = world_slots
+	var needed := _zero_pieces()
+	for id in figures:
+		_add_pieces(needed, figures[id]["need"])
+	piles = {}
+	for pile_id in pile_ids:
+		piles[pile_id] = _zero_pieces()
+	if not pile_ids.is_empty():
+		var rng := RandomNumberGenerator.new()
+		rng.seed = 2026
+		for kind in Balance.KINDS:
+			for i in int(needed[kind]):
+				var pile_id = pile_ids[rng.randi() % pile_ids.size()]
+				piles[pile_id][kind] = int(piles[pile_id][kind]) + 1
 	_world_ready = true
 	changed.emit("all", 0)
 	for pending in _pending_hellos:
@@ -116,17 +125,17 @@ func me() -> Dictionary:
 	return players.get(my_id(), {})
 
 
-func crumb_sum(crumbs: Dictionary) -> int:
+func piece_sum(pieces: Dictionary) -> int:
 	var total := 0
 	for kind in Balance.KINDS:
-		total += int(crumbs.get(kind, 0))
+		total += int(pieces.get(kind, 0))
 	return total
 
 
 func load_total(player: Dictionary) -> int:
 	if player.is_empty():
 		return 0
-	return crumb_sum(player["load"])
+	return piece_sum(player["load"])
 
 
 func upgrade_level(id: String) -> int:
@@ -149,17 +158,58 @@ func capacity() -> int:
 	return int(upgrade_value("sack"))
 
 
-func pile_fraction() -> float:
-	var start := crumb_sum(pile_start)
-	return 1.0 if start <= 0 else float(crumb_sum(pile)) / float(start)
+func floor_total() -> int:
+	var total := 0
+	for id in piles:
+		total += piece_sum(piles[id])
+	return total
 
 
-func crumbs_sorted() -> int:
-	return crumb_sum(stacks)
+func pieces_placed() -> int:
+	var total := 0
+	for id in figures:
+		total += piece_sum(figures[id]["have"])
+	return total
 
 
-func crumbs_total() -> int:
-	return crumb_sum(pile_start)
+func pieces_total() -> int:
+	var total := 0
+	for id in figures:
+		total += piece_sum(figures[id]["need"])
+	return total
+
+
+## Cuántas piezas de un color le faltan a una figura.
+func figure_missing(figure_id: int, kind: String) -> int:
+	if not figures.has(figure_id):
+		return 0
+	var figure: Dictionary = figures[figure_id]
+	return int(figure["need"].get(kind, 0)) - int(figure["have"].get(kind, 0))
+
+
+func figure_bricks_done(figure_id: int) -> bool:
+	for kind in Balance.KINDS:
+		if figure_missing(figure_id, kind) > 0:
+			return false
+	return true
+
+
+## Una figura está terminada con todos sus bloques y sus piezas especiales.
+func figure_complete(figure_id: int) -> bool:
+	if not figure_bricks_done(figure_id):
+		return false
+	for id in slots:
+		if int(slots[id]["figure"]) == figure_id and int(slots[id]["item"]) == -1:
+			return false
+	return true
+
+
+func figures_done() -> int:
+	var done := 0
+	for id in figures:
+		if bool(figures[id]["done"]):
+			done += 1
+	return done
 
 
 func items_placed() -> int:
@@ -171,9 +221,7 @@ func items_placed() -> int:
 
 
 func is_complete() -> bool:
-	if items.is_empty() or crumbs_total() == 0:
-		return false
-	return crumbs_sorted() >= crumbs_total() and items_placed() >= items.size()
+	return not figures.is_empty() and figures_done() >= figures.size()
 
 
 # --- Peticiones al host ---
@@ -243,13 +291,13 @@ func _get_part(key: String) -> Variant:
 	var id := int(parts[1]) if parts.size() > 1 else 0
 	match parts[0]:
 		"pile":
-			return pile
+			return piles.get(id)
 		"hopper":
 			return hopper
 		"bins":
 			return bins
-		"stacks":
-			return stacks
+		"figure":
+			return figures.get(id)
 		"economy":
 			return {"wallet": wallet, "upgrades": upgrades}
 		"item":
@@ -267,13 +315,13 @@ func _rpc_part(key: String, value: Variant) -> void:
 	var id := int(parts[1]) if parts.size() > 1 else 0
 	match parts[0]:
 		"pile":
-			pile = value
+			piles[id] = value
 		"hopper":
 			hopper = value
 		"bins":
 			bins = value
-		"stacks":
-			stacks = value
+		"figure":
+			figures[id] = value
 		"economy":
 			wallet = int(value["wallet"])
 			upgrades = value["upgrades"]
@@ -297,20 +345,18 @@ func _emit_part(key: String) -> void:
 
 func _snapshot() -> Dictionary:
 	return {
-		"pile": pile, "pile_start": pile_start, "hopper": hopper, "bins": bins,
-		"stacks": stacks, "items": items, "slots": slots, "players": players,
-		"wallet": wallet, "upgrades": upgrades, "noise": noise, "workers": workers_net,
-		"completed": completed,
+		"piles": piles, "hopper": hopper, "bins": bins, "figures": figures, "items": items,
+		"slots": slots, "players": players, "wallet": wallet, "upgrades": upgrades,
+		"noise": noise, "workers": workers_net, "completed": completed,
 	}
 
 
 @rpc("authority", "call_remote", "reliable")
 func _rpc_snapshot(snapshot: Dictionary) -> void:
-	pile = snapshot["pile"]
-	pile_start = snapshot["pile_start"]
+	piles = snapshot["piles"]
 	hopper = snapshot["hopper"]
 	bins = snapshot["bins"]
-	stacks = snapshot["stacks"]
+	figures = snapshot["figures"]
 	items = snapshot["items"]
 	slots = snapshot["slots"]
 	players = snapshot["players"]
@@ -357,13 +403,13 @@ func _srv_hello(sender: int, player_name: String) -> void:
 		return
 	var clean := player_name.strip_edges().left(20)
 	if clean == "":
-		clean = "Becario"
+		clean = "Figurita"
 	players[sender] = {
 		"name": clean,
 		"color": PLAYER_COLORS[_join_count % PLAYER_COLORS.size()],
 		"spawn": _join_count % 4,
 		"load_kind": "",
-		"load": _zero_crumbs(),
+		"load": _zero_pieces(),
 		"item": -1,
 	}
 	_join_count += 1
@@ -373,21 +419,21 @@ func _srv_hello(sender: int, player_name: String) -> void:
 	_event("joined", {"name": clean})
 
 
-func _srv_scoop(sender: int) -> void:
+func _srv_scoop(sender: int, pile_id: int) -> void:
 	var p: Dictionary = players[sender]
-	if int(p["item"]) != -1 or p["load_kind"] not in ["", "mixed"]:
+	if not piles.has(pile_id) or int(p["item"]) != -1 or p["load_kind"] not in ["", "mixed"]:
 		return
 	if not _cooldown_ok(sender, "scoop", Balance.SCOOP_COOLDOWN):
 		return
 	var space := capacity() - load_total(p)
 	if space <= 0:
 		return
-	var taken := _take_mixed(pile, mini(int(upgrade_value("shovel")), space))
-	if crumb_sum(taken) == 0:
+	var taken := _take_mixed(piles[pile_id], mini(int(upgrade_value("shovel")), space))
+	if piece_sum(taken) == 0:
 		return
-	_add_crumbs(p["load"], taken)
+	_add_pieces(p["load"], taken)
 	p["load_kind"] = "mixed"
-	_mark("pile")
+	_mark("pile:%d" % pile_id)
 	_mark("player:%d" % sender)
 
 
@@ -395,7 +441,7 @@ func _srv_dump(sender: int) -> void:
 	var p: Dictionary = players[sender]
 	if p["load_kind"] != "mixed":
 		return
-	_add_crumbs(hopper, p["load"])
+	_add_pieces(hopper, p["load"])
 	_clear_load(p)
 	_add_noise(sender, Balance.NOISE_DUMP)
 	_mark("hopper")
@@ -403,7 +449,7 @@ func _srv_dump(sender: int) -> void:
 
 
 func _srv_crank(sender: int) -> void:
-	if crumb_sum(hopper) == 0:
+	if piece_sum(hopper) == 0:
 		return
 	if not _cooldown_ok(sender, "crank", Balance.CRANK_INTERVAL):
 		return
@@ -429,30 +475,38 @@ func _srv_take_bag(sender: int, kind: String) -> void:
 	_mark("player:%d" % sender)
 
 
-func _srv_deposit(sender: int, kind: String) -> void:
+## Coloca en la figura las piezas que lleva el jugador (solo las que le faltan;
+## el resto se queda en la cesta para otra figura).
+func _srv_deposit(sender: int, figure_id: int) -> void:
 	var p: Dictionary = players[sender]
-	if kind not in Balance.KINDS or p["load_kind"] != kind:
+	var kind: String = p["load_kind"]
+	if kind not in Balance.KINDS or not figures.has(figure_id):
 		return
-	var amount := int(p["load"][kind])
-	stacks[kind] = int(stacks[kind]) + amount
-	_clear_load(p)
-	_pay_for_crumbs(amount)
-	_mark("stacks")
+	var amount := mini(int(p["load"][kind]), figure_missing(figure_id, kind))
+	if amount <= 0:
+		return
+	_place_pieces(figure_id, kind, amount)
+	p["load"][kind] = int(p["load"][kind]) - amount
+	if int(p["load"][kind]) <= 0:
+		_clear_load(p)
 	_mark("player:%d" % sender)
 
 
-## Soltar migas: vuelven a su sitio (las mezcladas a la montaña, las
-## clasificadas a su cubeta).
+## Soltar piezas: las mezcladas vuelven al montón más cercano y las
+## clasificadas a su cubeta.
 func _srv_return_load(sender: int) -> void:
 	var p: Dictionary = players[sender]
 	match p["load_kind"]:
 		"":
 			return
 		"mixed":
-			_add_crumbs(pile, p["load"])
-			_mark("pile")
+			var pile_id := _nearest_pile(player_pos.get(sender, Vector3.ZERO), false)
+			if pile_id == -1:
+				return
+			_add_pieces(piles[pile_id], p["load"])
+			_mark("pile:%d" % pile_id)
 		_:
-			_add_crumbs(bins, p["load"])
+			_add_pieces(bins, p["load"])
 			_mark("bins")
 	_clear_load(p)
 	_mark("player:%d" % sender)
@@ -493,6 +547,7 @@ func _srv_place_item(sender: int, slot_id: int) -> void:
 	_mark("slot:%d" % slot_id)
 	_mark("player:%d" % sender)
 	_mark("economy")
+	_check_figure(int(slot["figure"]))
 
 
 func _srv_drop_item(sender: int, pos: Vector3) -> void:
@@ -553,7 +608,7 @@ func _on_peer_disconnected(id: int) -> void:
 	_flush()
 
 
-# --- Lógica del host: automatización, hormigas y ruido ---
+# --- Lógica del host: automatización, ayudantes y ruido ---
 
 func _process(delta: float) -> void:
 	if not _world_ready or not multiplayer.is_server():
@@ -572,7 +627,7 @@ func _process(delta: float) -> void:
 
 func _update_automation(delta: float) -> void:
 	var wheel := upgrade_value("wheel")
-	if wheel > 0.0 and crumb_sum(hopper) > 0:
+	if wheel > 0.0 and piece_sum(hopper) > 0:
 		_wheel_acc += wheel * delta
 		var to_sort := int(_wheel_acc)
 		if to_sort > 0:
@@ -581,22 +636,23 @@ func _update_automation(delta: float) -> void:
 	else:
 		_wheel_acc = 0.0
 
+	# Cinta: lleva piezas clasificadas a la primera figura que las necesite.
 	var chute := upgrade_value("chute")
-	if chute > 0.0 and crumb_sum(bins) > 0:
+	if chute > 0.0 and piece_sum(bins) > 0:
 		_chute_acc += chute * delta
 		var to_move := int(_chute_acc)
 		if to_move > 0:
 			_chute_acc -= to_move
-			var moved := 0
 			for kind in Balance.KINDS:
-				var amount := mini(to_move, int(bins[kind]))
-				bins[kind] = int(bins[kind]) - amount
-				stacks[kind] = int(stacks[kind]) + amount
-				moved += amount
-			if moved > 0:
-				_pay_for_crumbs(moved)
-				_mark("bins")
-				_mark("stacks")
+				if to_move <= 0:
+					break
+				for figure_id in figures:
+					var amount := mini(mini(to_move, int(bins[kind])), figure_missing(figure_id, kind))
+					if amount > 0:
+						bins[kind] = int(bins[kind]) - amount
+						to_move -= amount
+						_mark("bins")
+						_place_pieces(figure_id, kind, amount)
 	else:
 		_chute_acc = 0.0
 
@@ -605,33 +661,44 @@ func _update_workers(delta: float) -> void:
 	var wanted := int(upgrade_value("workers"))
 	while _workers.size() < wanted:
 		var spawn: Vector3 = anchors.get("worker_spawn", Vector3.ZERO)
-		var offset := Vector3(randf_range(-1.2, 1.2), 0.0, randf_range(-0.6, 0.6))
+		var offset := Vector3(randf_range(-0.8, 0.8), 0.0, randf_range(-0.5, 0.5))
 		_workers.append({
-			"pos": spawn + offset, "offset": offset, "state": "to_pile", "t": 0.0,
-			"crumbs": _zero_crumbs(),
+			"pos": spawn + offset, "offset": offset, "state": "idle", "t": 0.0, "pile": -1,
+			"pieces": _zero_pieces(),
 		})
-	if not anchors.has("pile_point") or not anchors.has("hopper_point"):
+	if not anchors.has("hopper_point"):
 		return
-	var pile_point: Vector3 = anchors["pile_point"]
 	var hopper_point: Vector3 = anchors["hopper_point"]
+	var pile_points: Dictionary = anchors.get("piles", {})
 	for worker in _workers:
 		var offset: Vector3 = worker["offset"]
 		match worker["state"]:
+			"idle":
+				worker["t"] = float(worker["t"]) - delta
+				if float(worker["t"]) <= 0.0:
+					worker["t"] = 1.0
+					var pile_id := _nearest_pile(worker["pos"], true)
+					if pile_id != -1:
+						worker["pile"] = pile_id
+						worker["state"] = "to_pile"
 			"to_pile":
-				if _walk(worker, pile_point + offset, delta):
+				var pile_id := int(worker["pile"])
+				if not pile_points.has(pile_id) or piece_sum(piles[pile_id]) == 0:
+					worker["state"] = "idle"
+				elif _walk(worker, pile_points[pile_id] + offset, delta):
 					worker["state"] = "scoop"
 					worker["t"] = Balance.WORKER_SCOOP_TIME
 			"scoop":
 				worker["t"] = float(worker["t"]) - delta
 				if float(worker["t"]) <= 0.0:
-					var taken := _take_mixed(pile, Balance.WORKER_CAPACITY)
-					if crumb_sum(taken) == 0:
+					var pile_id := int(worker["pile"])
+					var taken := _take_mixed(piles[pile_id], Balance.WORKER_CAPACITY)
+					if piece_sum(taken) == 0:
 						worker["state"] = "idle"
-						worker["t"] = 1.0
 					else:
-						worker["crumbs"] = taken
+						worker["pieces"] = taken
 						worker["state"] = "to_hopper"
-						_mark("pile")
+						_mark("pile:%d" % pile_id)
 			"to_hopper":
 				if _walk(worker, hopper_point + offset * 0.5, delta):
 					worker["state"] = "dump"
@@ -639,19 +706,14 @@ func _update_workers(delta: float) -> void:
 			"dump":
 				worker["t"] = float(worker["t"]) - delta
 				if float(worker["t"]) <= 0.0:
-					_add_crumbs(hopper, worker["crumbs"])
-					worker["crumbs"] = _zero_crumbs()
-					worker["state"] = "to_pile"
+					_add_pieces(hopper, worker["pieces"])
+					worker["pieces"] = _zero_pieces()
+					worker["state"] = "idle"
+					worker["t"] = 0.0
 					_mark("hopper")
-			"idle":
-				worker["t"] = float(worker["t"]) - delta
-				if float(worker["t"]) <= 0.0:
-					worker["t"] = 1.0
-					if crumb_sum(pile) > 0:
-						worker["state"] = "to_pile"
 
 
-## Mueve a la hormiga hacia el objetivo. Devuelve true al llegar.
+## Mueve al ayudante hacia el objetivo. Devuelve true al llegar.
 func _walk(worker: Dictionary, target: Vector3, delta: float) -> bool:
 	var pos: Vector3 = worker["pos"]
 	var to := target - pos
@@ -663,10 +725,25 @@ func _walk(worker: Dictionary, target: Vector3, delta: float) -> bool:
 	return false
 
 
+## Montón más cercano a una posición (solo los que tienen piezas si se pide).
+func _nearest_pile(pos: Vector3, with_pieces: bool) -> int:
+	var pile_points: Dictionary = anchors.get("piles", {})
+	var best := -1
+	var best_dist := INF
+	for pile_id in pile_points:
+		if with_pieces and piece_sum(piles.get(pile_id, {})) == 0:
+			continue
+		var dist := pos.distance_to(pile_points[pile_id])
+		if dist < best_dist:
+			best_dist = dist
+			best = int(pile_id)
+	return best
+
+
 func _send_streams() -> void:
 	var data := []
 	for worker in _workers:
-		data.append([worker["pos"], crumb_sum(worker["crumbs"]) > 0])
+		data.append([worker["pos"], piece_sum(worker["pieces"]) > 0])
 	workers_net = data
 	changed.emit("workers", 0)
 	if Network.is_online() and not data.is_empty():
@@ -679,16 +756,16 @@ func _send_streams() -> void:
 
 
 func _add_noise(sender: int, amount: float) -> void:
-	if amount <= 0.0:
+	if not Balance.NOISE_ENABLED or amount <= 0.0:
 		return
-	amount *= upgrade_value("boots")
 	noise = minf(noise + amount, Balance.NOISE_MAX)
 	_player_noise[sender] = float(_player_noise.get(sender, 0.0)) + amount
 	if noise >= Balance.NOISE_MAX:
 		_snort()
 
 
-## Papá se revuelve y mete la mano por la rendija: va a por quien más ruido ha hecho.
+## Ruido al máximo: avisa de quién ha hecho más ruido (de momento no hay
+## ninguna amenaza que lo use; ver Balance.NOISE_ENABLED).
 func _snort() -> void:
 	var target := -1
 	var loudest := -1.0
@@ -713,38 +790,61 @@ func _check_complete() -> void:
 	_event("complete", {})
 
 
+## Al terminar una figura (bloques y piezas especiales): pegatinas extra y aviso.
+func _check_figure(figure_id: int) -> void:
+	if not figures.has(figure_id) or bool(figures[figure_id]["done"]):
+		return
+	if not figure_complete(figure_id):
+		return
+	figures[figure_id]["done"] = true
+	wallet += Balance.FIGURE_BONUS
+	_mark("figure:%d" % figure_id)
+	_mark("economy")
+	var model: String = figures[figure_id]["model"]
+	_event("figure_done", {"name": FigureData.MODELS[model]["name"], "figure": figure_id})
+
+
 # --- Utilidades ---
 
-func _zero_crumbs() -> Dictionary:
+func _zero_pieces() -> Dictionary:
 	var empty := {}
 	for kind in Balance.KINDS:
 		empty[kind] = 0
 	return empty
 
 
-func _add_crumbs(target: Dictionary, source: Dictionary) -> void:
+func _add_pieces(target: Dictionary, source: Dictionary) -> void:
 	for kind in Balance.KINDS:
 		target[kind] = int(target.get(kind, 0)) + int(source.get(kind, 0))
 
 
 func _clear_load(player: Dictionary) -> void:
-	player["load"] = _zero_crumbs()
+	player["load"] = _zero_pieces()
 	player["load_kind"] = ""
+
+
+func _place_pieces(figure_id: int, kind: String, amount: int) -> void:
+	var have: Dictionary = figures[figure_id]["have"]
+	have[kind] = int(have.get(kind, 0)) + amount
+	wallet += amount * Balance.PIECES_PER_PAY
+	_mark("figure:%d" % figure_id)
+	_mark("economy")
+	_check_figure(figure_id)
 
 
 func _sort_from_hopper(amount: int) -> void:
 	var moved := _take_mixed(hopper, amount)
-	if crumb_sum(moved) == 0:
+	if piece_sum(moved) == 0:
 		return
-	_add_crumbs(bins, moved)
+	_add_pieces(bins, moved)
 	_mark("hopper")
 	_mark("bins")
 
 
-## Saca "amount" migas de "source" respetando la proporción de cada tipo.
+## Saca "amount" piezas de "source" respetando la proporción de cada color.
 func _take_mixed(source: Dictionary, amount: int) -> Dictionary:
-	var taken := _zero_crumbs()
-	var total := crumb_sum(source)
+	var taken := _zero_pieces()
+	var total := piece_sum(source)
 	amount = mini(amount, total)
 	if amount <= 0:
 		return taken
@@ -753,27 +853,23 @@ func _take_mixed(source: Dictionary, amount: int) -> Dictionary:
 		var share := int(floor(float(amount) * float(source[kind]) / float(total)))
 		taken[kind] = share
 		count += share
-	# El resto (por redondeo) se reparte entre los tipos que aún tienen migas.
-	var i := 0
+	# El resto (por redondeo) se elige al azar según lo que queda de cada color,
+	# para que al coger pocas piezas no salgan siempre los mismos colores.
 	while count < amount:
-		var kind: String = Balance.KINDS[i % Balance.KINDS.size()]
-		if int(source[kind]) - int(taken[kind]) > 0:
-			taken[kind] = int(taken[kind]) + 1
-			count += 1
-		i += 1
+		var remaining := 0
+		for kind in Balance.KINDS:
+			remaining += int(source[kind]) - int(taken[kind])
+		var pick := randi() % remaining
+		for kind in Balance.KINDS:
+			var left := int(source[kind]) - int(taken[kind])
+			if pick < left:
+				taken[kind] = int(taken[kind]) + 1
+				count += 1
+				break
+			pick -= left
 	for kind in Balance.KINDS:
 		source[kind] = int(source[kind]) - int(taken[kind])
 	return taken
-
-
-func _pay_for_crumbs(amount: int) -> void:
-	_pay_remainder += amount
-	@warning_ignore("integer_division")
-	var earned := _pay_remainder / Balance.CRUMBS_PER_PAY
-	_pay_remainder -= earned * Balance.CRUMBS_PER_PAY
-	if earned > 0:
-		wallet += earned
-		_mark("economy")
 
 
 func _cooldown_ok(sender: int, action: String, seconds: float) -> bool:

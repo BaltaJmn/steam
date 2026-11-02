@@ -1,6 +1,6 @@
 # Ideas "Tidy Up": juegos súper simples, con coop y casi sin coste
 
-> **Estado:** dirección elegida: **el sofá de papá** ([sección 0.3](#03-nueva-temática-el-sofá-de-papá-elegida)). Las mecánicas son las de la sección 4. El prototipo jugable está en [`/game`](../game/README.md). Sustituye en alcance a [`concepto-inicial.md`](concepto-inicial.md), que se queda aparcado.
+> **Estado:** histórico. La dirección actual es [*The Floor Is Bricks*](concepto-bloques.md). Aquí quedan el análisis del género y las decisiones anteriores (dragón, sofá de papá).
 > **Objetivo:** un juego muy simple, con un coop divertido y un coste de desarrollo mínimo.
 
 ---

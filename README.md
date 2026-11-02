@@ -2,9 +2,9 @@
 
 > Todo el mundo sabe lo que pasa cuando pisas una.
 
-Juego coop (1–4), simple e incremental para Steam, en el estilo "tidy up". El suelo del cuarto de un niño está cubierto de piezas de construcción de seis cajas mezcladas. Sois sus figuritas: tenéis una noche para recogerlas, clasificarlas y montar los 6 sets. Cada set terminado cobra vida y trabaja con vosotros. Y sin hacer ruido, que a las 7:00 papá entra descalzo.
+Juego coop (1–4), simple, cozy y minimalista para Steam. El suelo del cuarto de un niño está cubierto de piezas de construcción mezcladas. Sois figuritas: hay que recogerlas, clasificarlas por color con una máquina y montar 6 figuras sencillas (pato, gato, casita, árbol, barco y cohete), con mejoras y ayudantes que automatizan el trabajo.
 
-- 📄 [**Propuesta actual**: cómo funciona y decisiones pendientes](docs/concepto-bloques.md)
-- 🎮 [Prototipo jugable (Godot 4.7)](game/README.md): todavía con la temática anterior (*Couch Crew*). Se adaptará cuando se cierre la propuesta
-- 📄 [Ideas "Tidy Up" y decisiones anteriores](docs/ideas-tidy-up.md)
+- 🎮 [**Prototipo jugable (Godot 4.7)**](game/README.md): cómo abrirlo, probar el coop y qué tocar
+- 📄 [**Diseño actual**](docs/concepto-bloques.md)
+- 📄 [Ideas "Tidy Up" y decisiones anteriores (dragón, sofá de papá)](docs/ideas-tidy-up.md)
 - 📄 [Concepto inicial: *Pull the Plug*, vaciar un océano (aparcado por tamaño)](docs/concepto-inicial.md)

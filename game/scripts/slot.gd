@@ -1,9 +1,11 @@
 @tool
 extends Node3D
-## Hueco con la silueta (fantasma) del objeto que va ahí. Lo crea la bandeja.
+## Hueco con la silueta (fantasma) de la pieza especial que va ahí. Lo crea
+## la figura a la que pertenece.
 
 @export var slot_id := 0
-@export var type_key := "button_red"
+@export var type_key := "eye_ink"
+@export var figure_id := 0
 
 var _ghost: MeshInstance3D
 var _area: Area3D

@@ -1,5 +1,5 @@
 extends CharacterBody3D
-## Becario de MicroLimpiezas (jugador). El local se mueve con teclado y ratón; los remotos solo
+## Figurita (jugador). El local se mueve con teclado y ratón; los remotos solo
 ## siguen la posición que les llega por red.
 
 const WALK_SPEED := 4.5
@@ -8,13 +8,13 @@ const JUMP_VELOCITY := 4.8
 const MOUSE_SENSITIVITY := 0.0025
 const SYNC_INTERVAL := 0.05
 const NOISE_SEND_INTERVAL := 0.5
-# Recipientes según el nivel de la mejora "Cubo más grande":
-# [radio, alto, material]. Tapón de botella, vaso de chupito, taza y tazón.
-const CONTAINERS := [[0.13, 0.08, "red"], [0.1, 0.2, "glass"], [0.14, 0.18, "white"], [0.2, 0.14, "bowl"]]
+# Cesta según el nivel de la mejora "Cesta más grande": [radio, alto, color].
+const BASKETS := [[0.2, 0.14, "cream"], [0.23, 0.16, "sky"], [0.26, 0.18, "mint"], [0.3, 0.2, "coral"]]
+const BASKET_SHOWN := 12  # piezas que se dibujan dentro de la cesta como mucho
 
 var peer_id := 1
 var is_local := false
-var display_name := "Becario"
+var display_name := "Figurita"
 var color := Color.WHITE
 
 var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
@@ -30,13 +30,8 @@ var _target_pitch := 0.0
 var _spawn_pos := Vector3.ZERO
 var _container: Node3D
 var _container_level := -1
-var _container_height := 0.1
-var _fill_mesh: CylinderMesh
-var _fill: MeshInstance3D
-var _last_amount := -1
-var _last_kind := ""
-var _spoon: Node3D
-var _spoon_anim := 0.0
+var _basket_pieces: MultiMesh
+var _last_load := {}
 var _burst: GPUParticles3D
 var _burst_mesh: BoxMesh
 var _bob_time := 0.0
@@ -72,36 +67,25 @@ func _build_body() -> void:
 	var body := Node3D.new()
 	body.name = "Body"
 	add_child(body)
-	# Mono de trabajo del color del jugador, cabeza y gorra de la empresa.
-	var overalls := StandardMaterial3D.new()
-	overalls.albedo_color = color
-	overalls.roughness = 0.8
-	overalls.diffuse_mode = BaseMaterial3D.DIFFUSE_TOON
-	overalls.next_pass = Visuals.outline()
+	# Figurita de madera muy simple: cuerpo del color del jugador, cabeza y ojos.
+	var paint := StandardMaterial3D.new()
+	paint.albedo_color = color
+	paint.roughness = 0.6
 	var torso := CapsuleMesh.new()
 	torso.radius = 0.3
 	torso.height = 1.05
-	torso.material = overalls
+	torso.material = paint
 	Visuals.mesh_instance(body, torso, Vector3(0, 0.55, 0))
 	var head_mesh := SphereMesh.new()
-	head_mesh.radius = 0.22
-	head_mesh.height = 0.44
-	Visuals.mesh_instance(body, head_mesh, Vector3(0, 1.25, 0), "skin")
-	var cap := CylinderMesh.new()
-	cap.top_radius = 0.2
-	cap.bottom_radius = 0.23
-	cap.height = 0.12
-	cap.material = overalls
-	Visuals.mesh_instance(body, cap, Vector3(0, 1.42, 0))
-	var visor := Visuals.box_mesh(Vector3(0.3, 0.03, 0.18))
-	visor.material = overalls
-	Visuals.mesh_instance(body, visor, Vector3(0, 1.38, -0.26))
+	head_mesh.radius = 0.24
+	head_mesh.height = 0.48
+	Visuals.mesh_instance(body, head_mesh, Vector3(0, 1.28, 0), "skin")
 	for side in [-1.0, 1.0]:
 		var eye := SphereMesh.new()
 		eye.radius = 0.035
 		eye.height = 0.07
-		Visuals.mesh_instance(body, eye, Vector3(0.08 * side, 1.29, -0.2), "dark")
-	var name_label := Visuals.label(self, display_name, Vector3(0, 1.75, 0), 40, color.lightened(0.3))
+		Visuals.mesh_instance(body, eye, Vector3(0.08 * side, 1.31, -0.22), "ink")
+	var name_label := Visuals.label(self, display_name, Vector3(0, 1.8, 0), 40, color.darkened(0.35))
 	# El jugador local no se ve a sí mismo (cámara en primera persona).
 	body.visible = not is_local
 	name_label.visible = not is_local
@@ -111,23 +95,13 @@ func _build_body() -> void:
 	hold_point.add_child(_container)
 
 
-## Lo que solo ve el jugador local: la cuchara en la mano y las migas que saltan.
+## Lo que solo ve el jugador local: las piezas que saltan al recoger y vaciar.
 func _build_first_person() -> void:
-	_spoon = Node3D.new()
-	_spoon.position = Vector3(-0.32, -0.3, -0.62)
-	camera.add_child(_spoon)
-	Visuals.mesh_instance(_spoon, Visuals.box_mesh(Vector3(0.03, 0.015, 0.32)), Vector3(0, 0, 0.12), "metal")
-	var spoon_bowl := SphereMesh.new()
-	spoon_bowl.radius = 0.065
-	spoon_bowl.height = 0.05
-	var bowl_instance := Visuals.mesh_instance(_spoon, spoon_bowl, Vector3(0, 0, -0.08), "metal")
-	bowl_instance.scale = Vector3(1.0, 1.0, 1.35)
-
 	_burst = GPUParticles3D.new()
 	_burst.top_level = true
 	_burst.one_shot = true
 	_burst.emitting = false
-	_burst.amount = 24
+	_burst.amount = 16
 	_burst.lifetime = 0.7
 	_burst.explosiveness = 1.0
 	var burst_process := ParticleProcessMaterial.new()
@@ -137,9 +111,9 @@ func _build_first_person() -> void:
 	burst_process.initial_velocity_max = 3.5
 	burst_process.gravity = Vector3(0, -9.8, 0)
 	burst_process.scale_min = 0.5
-	burst_process.scale_max = 1.2
+	burst_process.scale_max = 1.0
 	_burst.process_material = burst_process
-	_burst_mesh = Visuals.box_mesh(Vector3(0.07, 0.07, 0.07))
+	_burst_mesh = Visuals.box_mesh(Vector3(0.12, 0.09, 0.12))
 	_burst.draw_pass_1 = _burst_mesh
 	add_child(_burst)
 
@@ -227,6 +201,8 @@ func _send_transform(delta: float) -> void:
 
 
 func _send_noise(delta: float) -> void:
+	if not Balance.NOISE_ENABLED:
+		return
 	_noise_timer += delta
 	if _noise_timer < NOISE_SEND_INTERVAL or _noise_acc <= 0.0:
 		return
@@ -284,7 +260,8 @@ func _drop_position() -> Vector3:
 	return hit["position"]
 
 
-## El recipiente que llevas en la mano (cambia con la mejora) y las migas dentro.
+## La cesta que llevas en la mano (crece con la mejora) y las piezas dentro,
+## con sus colores de verdad.
 func _update_sack() -> void:
 	var level := Game.upgrade_level("sack")
 	if level != _container_level:
@@ -292,49 +269,52 @@ func _update_sack() -> void:
 	var data: Dictionary = Game.players.get(peer_id, {})
 	var amount: int = Game.load_total(data)
 	_container.visible = amount > 0
-	if amount <= 0:
+	if amount <= 0 or data["load"] == _last_load:
 		return
-	var kind: String = data["load_kind"]
-	if amount == _last_amount and kind == _last_kind:
-		return
-	_last_amount = amount
-	_last_kind = kind
-	var fraction := clampf(float(amount) / maxf(1.0, float(Game.capacity())), 0.0, 1.0)
-	_fill_mesh.material = Visuals.mat("crumbs" if kind == "mixed" else kind)
-	_fill_mesh.height = maxf(0.01, fraction * _container_height * 0.9)
-	_fill.position.y = _fill_mesh.height / 2.0
+	_last_load = data["load"].duplicate()
+	var shown := 0
+	for kind in Balance.KINDS:
+		for i in int(data["load"].get(kind, 0)):
+			if shown >= BASKET_SHOWN:
+				break
+			_basket_pieces.set_instance_color(shown, Visuals.COLORS[kind])
+			shown += 1
+	_basket_pieces.visible_instance_count = shown
 
 
 func _build_container(level: int) -> void:
 	_container_level = level
-	_last_amount = -1
+	_last_load = {}
 	for child in _container.get_children():
 		child.queue_free()
-	var spec: Array = CONTAINERS[clampi(level, 0, CONTAINERS.size() - 1)]
+	var spec: Array = BASKETS[clampi(level, 0, BASKETS.size() - 1)]
 	var radius: float = spec[0]
-	_container_height = spec[1]
-	var cup := CylinderMesh.new()
-	cup.top_radius = radius
-	cup.bottom_radius = radius * 0.9
-	cup.height = _container_height
-	cup.cap_top = false
-	var cup_material := Visuals.mat(spec[2]).duplicate() as StandardMaterial3D
-	cup_material.cull_mode = BaseMaterial3D.CULL_DISABLED
-	cup.material = cup_material
-	Visuals.mesh_instance(_container, cup, Vector3(0, _container_height / 2.0, 0))
-	if level == 2:
-		var handle := TorusMesh.new()
-		handle.inner_radius = 0.05
-		handle.outer_radius = 0.075
-		var handle_instance := Visuals.mesh_instance(_container, handle, Vector3(radius + 0.04, _container_height / 2.0, 0), "white")
-		handle_instance.rotation_degrees = Vector3(90, 0, 0)
-	_fill_mesh = CylinderMesh.new()
-	_fill_mesh.top_radius = radius * 0.85
-	_fill_mesh.bottom_radius = radius * 0.8
-	_fill = Visuals.mesh_instance(_container, _fill_mesh, Vector3.ZERO)
+	var height: float = spec[1]
+	var basket := CylinderMesh.new()
+	basket.top_radius = radius
+	basket.bottom_radius = radius * 0.85
+	basket.height = height
+	basket.cap_top = false
+	var basket_material := Visuals.mat(spec[2]).duplicate() as StandardMaterial3D
+	basket_material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	basket.material = basket_material
+	Visuals.mesh_instance(_container, basket, Vector3(0, height / 2.0, 0))
+	# Piezas en miniatura dentro de la cesta, en capas de 2x2.
+	_basket_pieces = Visuals.brick_multimesh(BASKET_SHOWN)
+	var piece_scale := 0.18
+	for i in BASKET_SHOWN:
+		var layer := floorf(i / 4.0)
+		var cell := i % 4
+		var pos := Vector3((float(cell % 2) - 0.5) * 0.12, 0.05 + layer * 0.08, (floorf(cell / 2.0) - 0.5) * 0.12)
+		var basis := Basis(Vector3.UP, float(i) * 0.7).scaled(Vector3.ONE * piece_scale)
+		_basket_pieces.set_instance_transform(i, Transform3D(basis, pos))
+	var pieces := MultiMeshInstance3D.new()
+	pieces.multimesh = _basket_pieces
+	pieces.material_override = Visuals.mat("bricks")
+	_container.add_child(pieces)
 
 
-## Balanceo al andar, temblor (manotazos) y la cuchara.
+## Balanceo al andar y temblor de cámara.
 func _update_camera_feel(delta: float) -> void:
 	var speed := Vector2(velocity.x, velocity.z).length()
 	if is_on_floor() and speed > 0.5:
@@ -343,30 +323,24 @@ func _update_camera_feel(delta: float) -> void:
 	_shake = maxf(0.0, _shake - delta * 0.8)
 	camera.v_offset = bob + randf_range(-1.0, 1.0) * _shake * 0.3
 	camera.h_offset = randf_range(-1.0, 1.0) * _shake * 0.3
-	if _spoon:
-		_spoon_anim = maxf(0.0, _spoon_anim - delta * 4.0)
-		var dip := sin(_spoon_anim * PI)
-		_spoon.rotation = Vector3(-0.35 - dip * 0.9, 0.25, 0.0)
-		_spoon.scale = Vector3.ONE * (1.0 + Game.upgrade_level("shovel") * 0.3)
 
 
 func add_shake(amount: float) -> void:
 	_shake = maxf(_shake, amount)
 
 
-## Efectos de recoger migas (los llama la montaña).
+## Efectos de recoger piezas del suelo (los llama el montón).
 func play_scoop() -> void:
-	_spoon_anim = 1.0
-	_play_burst("crumbs")
+	_play_burst(Balance.KINDS[randi() % Balance.KINDS.size()])
 
 
-## Efectos de vaciar el recipiente (los llaman la tolva y los cuencos).
+## Efectos de vaciar la cesta (los llaman la tolva y las figuras).
 func play_dump() -> void:
 	var data: Dictionary = Game.me()
 	if data.is_empty() or data["load_kind"] == "":
 		return
 	var kind: String = data["load_kind"]
-	_play_burst("crumbs" if kind == "mixed" else kind)
+	_play_burst(Balance.KINDS[randi() % Balance.KINDS.size()] if kind == "mixed" else kind)
 
 
 func _play_burst(material_key: String) -> void:
@@ -387,7 +361,7 @@ func get_hold_transform() -> Transform3D:
 	return hold_point.global_transform
 
 
-## Lo llama papá al dar un manotazo si este jugador ha sido el más ruidoso.
+## Empujón (lo usaría una amenaza como papá; ahora el ruido está desactivado).
 func knockback(from: Vector3) -> void:
 	var away := global_position - from
 	away.y = 0.0

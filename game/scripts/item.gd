@@ -1,10 +1,10 @@
 @tool
 extends Node3D
-## Objeto perdido en el sofá: se coge, se lleva en la mano y se devuelve a su
-## hueco en la bandeja. Cada objeto de la escena necesita un item_id único.
+## Pieza especial (ojo, puerta, bandera...): se coge, se lleva en la mano y se
+## pone en su figura. Cada pieza de la escena necesita un item_id único.
 
 @export var item_id := 0
-@export var type_key := "button_red"
+@export var type_key := "eye_ink"
 
 var _mesh: MeshInstance3D
 var _area: Area3D

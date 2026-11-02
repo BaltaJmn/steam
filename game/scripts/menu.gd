@@ -20,7 +20,7 @@ func _ready() -> void:
 
 func _build() -> void:
 	var background := ColorRect.new()
-	background.color = Color(0.07, 0.05, 0.04)
+	background.color = Color(0.98, 0.95, 0.9)
 	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(background)
 
@@ -33,19 +33,21 @@ func _build() -> void:
 	center.add_child(box)
 
 	var title := Label.new()
-	title.text = "COUCH CREW"
+	title.text = "THE FLOOR IS BRICKS"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 56)
-	title.add_theme_color_override("font_color", Color(1.0, 0.8, 0.35))
+	title.add_theme_color_override("font_color", Color(0.9, 0.48, 0.42))
 	box.add_child(title)
 	var subtitle := Label.new()
-	subtitle.text = "Prototipo · encontrad el mando de la tele sin despertar a %s" % Balance.SLEEPER_NAME
+	subtitle.text = "Prototipo · recoge las piezas del suelo y monta las 6 figuras"
+	subtitle.add_theme_color_override("font_color", Color(0.4, 0.38, 0.45))
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(subtitle)
 
 	box.add_child(HSeparator.new())
 	var name_label := Label.new()
 	name_label.text = "Tu nombre"
+	name_label.add_theme_color_override("font_color", Color(0.4, 0.38, 0.45))
 	box.add_child(name_label)
 	_name_edit = LineEdit.new()
 	_name_edit.text = Network.player_name
@@ -67,7 +69,7 @@ func _build() -> void:
 	_status = Label.new()
 	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_status.add_theme_color_override("font_color", Color(1.0, 0.75, 0.6))
+	_status.add_theme_color_override("font_color", Color(0.8, 0.38, 0.33))
 	box.add_child(_status)
 
 
