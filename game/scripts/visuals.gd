@@ -217,6 +217,7 @@ static func label(
 	parent: Node, text: String, pos: Vector3, size := 48, color := Color(0.25, 0.24, 0.3), billboard := true
 ) -> Label3D:
 	var l := Label3D.new()
+	l.font = UiStyle.font(700)
 	l.text = text
 	l.position = pos
 	l.font_size = size

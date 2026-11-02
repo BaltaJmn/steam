@@ -19,58 +19,95 @@ func _ready() -> void:
 
 
 func _build() -> void:
+	theme = UiStyle.theme()
 	var background := ColorRect.new()
-	background.color = Color(0.96, 0.92, 0.86)
+	background.color = UiStyle.CREAM
 	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(background)
 
 	var center := CenterContainer.new()
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(center)
-	var box := VBoxContainer.new()
-	box.custom_minimum_size = Vector2(460, 0)
-	box.add_theme_constant_override("separation", 12)
-	center.add_child(box)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 22)
+	center.add_child(column)
 
-	var title := Label.new()
-	title.text = "the floor is bricks"
+	# Tres bloques de colores, el título y una frase.
+	var bricks := HBoxContainer.new()
+	bricks.alignment = BoxContainer.ALIGNMENT_CENTER
+	bricks.add_theme_constant_override("separation", 10)
+	column.add_child(bricks)
+	for kind in ["coral", "yellow", "sky"]:
+		bricks.add_child(_brick(Visuals.COLORS[kind]))
+	var title := UiStyle.label("the floor is bricks", 60, UiStyle.ROSE_DARK, 800)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 56)
-	title.add_theme_color_override("font_color", Color(0.72, 0.5, 0.45))
-	box.add_child(title)
-	var subtitle := Label.new()
-	subtitle.text = "prototipo · busca las piezas por el suelo y monta las 10 figuras"
-	subtitle.add_theme_color_override("font_color", Color(0.4, 0.38, 0.45))
+	column.add_child(title)
+	var subtitle := UiStyle.label("busca las piezas por el suelo y monta las 10 figuras", 19, UiStyle.TEXT_SOFT)
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(subtitle)
+	column.add_child(subtitle)
 
-	box.add_child(HSeparator.new())
-	var name_label := Label.new()
-	name_label.text = "Tu nombre"
-	name_label.add_theme_color_override("font_color", Color(0.4, 0.38, 0.45))
-	box.add_child(name_label)
+	# Tarjeta con el nombre y los botones.
+	var card := PanelContainer.new()
+	card.custom_minimum_size = Vector2(440, 0)
+	card.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	column.add_child(card)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 12)
+	card.add_child(box)
+	box.add_child(UiStyle.label("tu nombre", 16, UiStyle.TEXT_SOFT))
 	_name_edit = LineEdit.new()
 	_name_edit.text = Network.player_name
 	_name_edit.max_length = 20
 	box.add_child(_name_edit)
-
-	_add_button(box, "Jugar solo", _on_solo)
-	_add_button(box, "Crear partida (host)", _on_host)
+	_add_button(box, "jugar solo", _on_solo)
+	_add_button(box, "crear partida", _on_host)
+	box.add_child(HSeparator.new())
+	box.add_child(UiStyle.label("unirse a una partida", 16, UiStyle.TEXT_SOFT))
 	var join_row := HBoxContainer.new()
+	join_row.add_theme_constant_override("separation", 10)
 	box.add_child(join_row)
 	_address_edit = LineEdit.new()
 	_address_edit.text = "127.0.0.1"
 	_address_edit.placeholder_text = "IP del host"
 	_address_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	join_row.add_child(_address_edit)
-	_add_button(join_row, "Unirse", _on_join)
-	_add_button(box, "Salir", get_tree().quit)
+	_add_button(join_row, "unirse", _on_join)
 
-	_status = Label.new()
+	_status = UiStyle.label("", 16, UiStyle.ROSE_DARK)
 	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_status.add_theme_color_override("font_color", Color(0.8, 0.38, 0.33))
 	box.add_child(_status)
+	var quit := Button.new()
+	quit.text = "salir"
+	quit.theme_type_variation = "GhostButton"
+	quit.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	quit.pressed.connect(get_tree().quit)
+	column.add_child(quit)
+
+
+## Un bloque de construcción dibujado: rectángulo redondeado con dos pivotes.
+func _brick(color: Color) -> Control:
+	var brick := VBoxContainer.new()
+	brick.add_theme_constant_override("separation", 0)
+	var studs := HBoxContainer.new()
+	studs.alignment = BoxContainer.ALIGNMENT_CENTER
+	studs.add_theme_constant_override("separation", 12)
+	brick.add_child(studs)
+	for i in 2:
+		var stud := Panel.new()
+		var stud_style := StyleBoxFlat.new()
+		stud_style.bg_color = color
+		stud_style.corner_radius_top_left = 5
+		stud_style.corner_radius_top_right = 5
+		stud.add_theme_stylebox_override("panel", stud_style)
+		stud.custom_minimum_size = Vector2(16, 8)
+		studs.add_child(stud)
+	var body := Panel.new()
+	var body_style := UiStyle.box(color, 10, 0, 0)
+	body.add_theme_stylebox_override("panel", body_style)
+	body.custom_minimum_size = Vector2(64, 34)
+	brick.add_child(body)
+	return brick
 
 
 func _add_button(parent: Control, text: String, callback: Callable) -> void:
@@ -101,7 +138,7 @@ func _on_solo() -> void:
 func _on_host() -> void:
 	_save_name()
 	if Network.host() != OK:
-		_status.text = "No se pudo crear la partida (¿el puerto %d está ocupado?)." % Network.PORT
+		_status.text = "no se pudo crear la partida (¿el puerto %d está ocupado?)" % Network.PORT
 		return
 	get_tree().change_scene_to_file(WORLD_SCENE)
 
@@ -109,9 +146,9 @@ func _on_host() -> void:
 func _on_join() -> void:
 	_save_name()
 	if Network.join(_address_edit.text.strip_edges()) != OK:
-		_status.text = "Dirección no válida."
+		_status.text = "esa dirección no es válida"
 		return
-	_status.text = "Conectando..."
+	_status.text = "conectando..."
 	_set_busy(true)
 
 

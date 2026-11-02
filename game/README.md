@@ -55,7 +55,8 @@ Pegatinas ──► TIENDA de cositas monas (compartidas): cesta de gatito, mano
 | Cuántos grupitos de piezas hay y por dónde | `scripts/floor_scatter.gd` (y su nodo `FloorScatter` en `world.tscn`) |
 | Colores, materiales y el bloque con pivotes | `scripts/visuals.gd` |
 | La habitación (paredes, ventana, luces, muebles, filtro lofi) | `scripts/room.gd` |
-| Textos de la interfaz | `scripts/hud.gd` y `scripts/menu.gd` |
+| Estilo de la interfaz (colores, tipografía, botones, tarjetas) | `scripts/ui_style.gd` |
+| Textos y distribución de la interfaz | `scripts/hud.gd` y `scripts/menu.gd` |
 
 Si añades o cambias figuras, las piezas del suelo se recalculan solas: siempre hay exactamente las que hacen falta.
 
@@ -66,6 +67,10 @@ Si añades o cambias figuras, las piezas del suelo se recalculan solas: siempre 
 - **Miles de bloques** se dibujan con `MultiMesh`: un solo bloque con pivotes y un color por pieza.
 - **Los scripts con `@tool`** generan sus formas también en el editor, así que ves el mapa (y las figuras terminadas) al abrir `world.tscn`.
 - **Ruido:** el sistema sigue en `Game`, pero está apagado (`Balance.NOISE_ENABLED = false`) para que el juego sea cozy.
+
+## Créditos
+
+- Tipografía **Nunito** (The Nunito Project Authors), licencia SIL Open Font License 1.1: ver `fonts/OFL.txt`.
 
 ## Siguientes pasos
 

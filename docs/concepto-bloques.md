@@ -14,6 +14,7 @@ Una habitación tranquila al atardecer, con **10 mesas**. El suelo está **lleno
 - Plantas, una estantería, un tocadiscos.
 - Un filtro suave de grano y viñeta.
 - Todo son bloques y formas geométricas simples, sin texturas, sin contornos y sin amenazas.
+- **Interfaz** a juego: tarjetas y pastillas color crema con esquinas muy redondeadas y sombra suave, texto cacao, botones rosa empolvado, tipografía redondeada (Nunito), teclas dibujadas como pastillitas y un puntito de color por cada tipo de pieza. Todo en minúsculas.
 
 ---
 
