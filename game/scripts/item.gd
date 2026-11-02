@@ -8,6 +8,8 @@ extends Node3D
 
 var _mesh: MeshInstance3D
 var _area: Area3D
+var _glint: MeshInstance3D
+var _time := 0.0
 var _state := "loose"
 var _holder := 0
 
@@ -34,6 +36,10 @@ func _build() -> void:
 	collision.position = Vector3(0, 0.2, 0)
 	_area.add_child(collision)
 	add_child(_area)
+	var spark := SphereMesh.new()
+	spark.radius = 0.02
+	spark.height = 0.04
+	_glint = Visuals.mesh_instance(self, spark, Vector3(0, 0.25, 0), "glint")
 	_set_pose(false)
 
 
@@ -56,6 +62,7 @@ func _refresh() -> void:
 	_state = data["state"]
 	_holder = int(data["holder"])
 	_area.collision_layer = Visuals.LAYER_INTERACT if _state == "loose" else 0
+	_glint.visible = _state == "loose"
 	match _state:
 		"loose":
 			global_position = data["pos"]
@@ -71,8 +78,16 @@ func _refresh() -> void:
 			_set_pose(true)
 
 
-func _process(_delta: float) -> void:
-	if Engine.is_editor_hint() or _state != "held":
+func _process(delta: float) -> void:
+	if Engine.is_editor_hint():
+		return
+	if _state == "loose":
+		# El brillito sube, baja y late despacio para delatar la pieza.
+		_time += delta
+		_glint.position.y = 0.25 + sin(_time * 2.0) * 0.04
+		_glint.scale = Vector3.ONE * (0.7 + 0.5 * absf(sin(_time * 3.0 + float(item_id))))
+		return
+	if _state != "held":
 		return
 	var holder = Game.player_nodes.get(_holder)
 	if is_instance_valid(holder):

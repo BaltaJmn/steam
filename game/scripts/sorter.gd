@@ -4,7 +4,7 @@ extends Node3D
 ## seis cubetas delante, una por color. Con las mejoras aparecen el motorcito
 ## (gira sola) y la cinta que lleva las piezas a las figuras.
 
-const BIN_SPACING := 0.62
+const BIN_SPACING := 0.32
 
 var _crank_pivot: Node3D
 var _motor: Node3D
@@ -27,64 +27,64 @@ func _ready() -> void:
 
 
 func _build() -> void:
-	var width := BIN_SPACING * Balance.KINDS.size() + 0.4
+	var width := BIN_SPACING * Balance.KINDS.size() + 0.3
 	# Cuerpo de la máquina
-	Visuals.mesh_instance(self, Visuals.box_mesh(Vector3(width, 0.9, 1.3)), Vector3(0, 0.45, 0), "machine")
-	Visuals.static_box(self, Vector3(width, 0.9, 1.3), Vector3(0, 0.45, 0), Visuals.LAYER_WORLD)
+	Visuals.mesh_instance(self, Visuals.box_mesh(Vector3(width, 0.7, 0.6)), Vector3(0, 0.35, 0), "machine")
+	Visuals.static_box(self, Vector3(width, 0.7, 0.6), Vector3(0, 0.35, 0), Visuals.LAYER_WORLD)
 
 	# Tolva (embudo)
 	var funnel := CylinderMesh.new()
-	funnel.top_radius = 1.0
-	funnel.bottom_radius = 0.5
-	funnel.height = 0.75
+	funnel.top_radius = 0.4
+	funnel.bottom_radius = 0.2
+	funnel.height = 0.35
 	funnel.radial_segments = 24
-	Visuals.mesh_instance(self, funnel, Vector3(0, 1.27, 0), "cream")
+	Visuals.mesh_instance(self, funnel, Vector3(0, 0.88, 0), "cream")
 	Visuals.static_box(
-		self, Vector3(1.8, 0.75, 1.8), Vector3(0, 1.27, 0),
+		self, Vector3(0.8, 0.35, 0.8), Vector3(0, 0.88, 0),
 		Visuals.LAYER_WORLD | Visuals.LAYER_INTERACT, "hopper"
 	)
-	_hopper_label = Visuals.label(self, "", Vector3(0, 2.05, 0), 44)
+	_hopper_label = Visuals.label(self, "", Vector3(0, 1.3, 0), 36)
 
 	# Manivela
 	_crank_pivot = Node3D.new()
-	_crank_pivot.position = Vector3(width / 2.0 + 0.05, 0.6, 0)
+	_crank_pivot.position = Vector3(width / 2.0 + 0.03, 0.45, 0)
 	add_child(_crank_pivot)
 	var axle := CylinderMesh.new()
-	axle.top_radius = 0.06
-	axle.bottom_radius = 0.06
-	axle.height = 0.3
-	var axle_instance := Visuals.mesh_instance(_crank_pivot, axle, Vector3(0.1, 0, 0), "metal")
+	axle.top_radius = 0.03
+	axle.bottom_radius = 0.03
+	axle.height = 0.15
+	var axle_instance := Visuals.mesh_instance(_crank_pivot, axle, Vector3(0.05, 0, 0), "metal")
 	axle_instance.rotation_degrees = Vector3(0, 0, 90)
-	Visuals.mesh_instance(_crank_pivot, Visuals.box_mesh(Vector3(0.06, 0.45, 0.06)), Vector3(0.25, 0.2, 0), "metal")
+	Visuals.mesh_instance(_crank_pivot, Visuals.box_mesh(Vector3(0.03, 0.22, 0.03)), Vector3(0.12, 0.1, 0), "metal")
 	var grip := SphereMesh.new()
-	grip.radius = 0.09
-	grip.height = 0.18
-	Visuals.mesh_instance(_crank_pivot, grip, Vector3(0.36, 0.42, 0), "coral")
-	Visuals.static_box(self, Vector3(0.7, 0.9, 0.7), Vector3(width / 2.0 + 0.35, 0.7, 0), Visuals.LAYER_INTERACT, "crank")
+	grip.radius = 0.045
+	grip.height = 0.09
+	Visuals.mesh_instance(_crank_pivot, grip, Vector3(0.17, 0.21, 0), "coral")
+	Visuals.static_box(self, Vector3(0.35, 0.5, 0.4), Vector3(width / 2.0 + 0.18, 0.45, 0), Visuals.LAYER_INTERACT, "crank")
 
 	# Cubetas de salida, una por color
 	for i in Balance.KINDS.size():
 		var kind: String = Balance.KINDS[i]
 		var x := (i - (Balance.KINDS.size() - 1) / 2.0) * BIN_SPACING
-		Visuals.mesh_instance(self, Visuals.box_mesh(Vector3(0.52, 0.42, 0.52)), Vector3(x, 0.21, 0.98), kind)
+		Visuals.mesh_instance(self, Visuals.box_mesh(Vector3(0.28, 0.2, 0.28)), Vector3(x, 0.1, 0.48), kind)
 		Visuals.static_box(
-			self, Vector3(0.52, 0.6, 0.52), Vector3(x, 0.3, 0.98),
+			self, Vector3(0.28, 0.3, 0.28), Vector3(x, 0.15, 0.48),
 			Visuals.LAYER_WORLD | Visuals.LAYER_INTERACT, "bin_%s" % kind
 		)
-		_bin_labels[kind] = Visuals.label(self, "", Vector3(x, 0.72, 1.05), 36)
+		_bin_labels[kind] = Visuals.label(self, "", Vector3(x, 0.38, 0.5), 28)
 
 	# Motorcito (mejora "wheel")
 	_motor = Node3D.new()
-	_motor.position = Vector3(-width / 2.0 - 0.35, 0.55, 0)
+	_motor.position = Vector3(-width / 2.0 - 0.18, 0.3, 0)
 	add_child(_motor)
-	Visuals.mesh_instance(_motor, Visuals.box_mesh(Vector3(0.5, 0.5, 0.5)), Vector3.ZERO, "sky")
-	_fan = Visuals.mesh_instance(_motor, Visuals.box_mesh(Vector3(0.06, 0.6, 0.08)), Vector3(-0.3, 0, 0), "yellow")
+	Visuals.mesh_instance(_motor, Visuals.box_mesh(Vector3(0.28, 0.28, 0.28)), Vector3.ZERO, "sky")
+	_fan = Visuals.mesh_instance(_motor, Visuals.box_mesh(Vector3(0.03, 0.32, 0.04)), Vector3(-0.17, 0, 0), "yellow")
 	_motor.visible = false
 
 	# Cinta transportadora (mejora "chute")
 	_belt = Node3D.new()
 	add_child(_belt)
-	Visuals.mesh_instance(_belt, Visuals.box_mesh(Vector3(width - 0.2, 0.08, 1.2)), Vector3(0, 0.06, 1.95), "ink")
+	Visuals.mesh_instance(_belt, Visuals.box_mesh(Vector3(width - 0.1, 0.04, 0.5)), Vector3(0, 0.02, 0.9), "ink")
 	_belt.visible = false
 
 	if Engine.is_editor_hint():

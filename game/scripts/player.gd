@@ -2,9 +2,9 @@ extends CharacterBody3D
 ## Figurita (jugador). El local se mueve con teclado y ratón; los remotos solo
 ## siguen la posición que les llega por red.
 
-const WALK_SPEED := 4.5
-const SPRINT_SPEED := 7.5
-const JUMP_VELOCITY := 4.8
+const WALK_SPEED := 3.2
+const SPRINT_SPEED := 5.2
+const JUMP_VELOCITY := 4.0
 const MOUSE_SENSITIVITY := 0.0025
 const SYNC_INTERVAL := 0.05
 const NOISE_SEND_INTERVAL := 0.5
@@ -113,7 +113,7 @@ func _build_first_person() -> void:
 	burst_process.scale_min = 0.5
 	burst_process.scale_max = 1.0
 	_burst.process_material = burst_process
-	_burst_mesh = Visuals.box_mesh(Vector3(0.12, 0.09, 0.12))
+	_burst_mesh = Visuals.box_mesh(Vector3(0.05, 0.04, 0.05))
 	_burst.draw_pass_1 = _burst_mesh
 	add_child(_burst)
 
@@ -299,9 +299,9 @@ func _build_container(level: int) -> void:
 	basket_material.cull_mode = BaseMaterial3D.CULL_DISABLED
 	basket.material = basket_material
 	Visuals.mesh_instance(_container, basket, Vector3(0, height / 2.0, 0))
-	# Piezas en miniatura dentro de la cesta, en capas de 2x2.
+	# Piezas dentro de la cesta (algo más pequeñas), en capas de 2x2.
 	_basket_pieces = Visuals.brick_multimesh(BASKET_SHOWN)
-	var piece_scale := 0.18
+	var piece_scale := 0.7
 	for i in BASKET_SHOWN:
 		var layer := floorf(i / 4.0)
 		var cell := i % 4

@@ -1,53 +1,61 @@
 # The Floor Is Bricks (nombre provisional)
 
-> **Estado:** dirección elegida. El prototipo de [`/game`](../game/README.md) ya la implementa.
+> **Estado:** dirección elegida. El prototipo de [`/game`](../game/README.md) la implementa: habitación con 10 mesas, piezas por el suelo y estilo creamy y lofi.
 > **Lema:** *"Todo el mundo sabe lo que pasa cuando pisas una."*
 
 ---
 
 ## 1. La idea
 
-El suelo del cuarto de un niño está **cubierto de piezas de construcción** de colores, todas mezcladas. Sois figuritas: hay que **recogerlas, clasificarlas por color y montar 6 figuras muy sencillas** (pato, gato, casita, árbol, barco y cohete). Cuando todo está montado, el suelo queda impecable y mañana nadie pisará una pieza.
+Una habitación tranquila al atardecer, con **10 mesas**. El suelo está **lleno de piezas de construcción** de colores, mezcladas y repartidas en grupitos por todas partes (también debajo de las mesas). Hay que **buscarlas, clasificarlas por color y montar en cada mesa una figura muy sencilla**: pato, gato, casita, árbol, barco, cohete, seta, flor, pez y taza.
 
-**Estilo: cozy y minimalista.** Todo son bloques y formas geométricas simples, con colores pastel planos, luz cálida de tarde y sombras suaves, como un diorama. Sin texturas, sin contornos y sin amenazas.
+**Estilo: creamy, lofi y minimalista.**
+- Colores crema y pastel apagados, luz cálida de atardecer entrando por la ventana y lámparas colgantes.
+- Plantas, una estantería, un tocadiscos.
+- Un filtro suave de grano y viñeta.
+- Todo son bloques y formas geométricas simples, sin texturas, sin contornos y sin amenazas.
 
 ---
 
 ## 2. Cómo funciona
 
 ```
-Piezas por el suelo ──[recoger]──► cesta de piezas mezcladas
+Grupitos de piezas por el suelo ──[buscar y recoger]──► cesta de piezas mezcladas
    ──► tolva de la clasificadora ──[manivela]──► 6 cubetas, una por color
-   ──[coger un color]──► obra de una figura ──► los bloques aparecen en su sitio
-Piezas especiales (ojos, puerta, manzana, bandera, ventanilla) ──[buscar]──► su hueco en la figura
+   ──[coger un color]──► mesa de una figura ──► los bloques aparecen en su sitio
+Piezas especiales (ojos, puerta, manzana, bandera, ventanilla), escondidas y con un brillito
+   ──[encontrar]──► con la pieza en la mano, mira su mesa y E
 Figura terminada ──► confeti y pegatinas extra ──► mejoras
 ```
 
-- **Suelo:** 6 montones con exactamente las piezas que hacen falta (310 en el prototipo). Se ven todas y desaparecen según se recogen.
-- **Clasificar:** la máquina separa por **color**, y cada cubeta es de un color.
-- **Construir:** cada figura enseña su silueta transparente. Al entregar piezas de un color, los bloques de ese color aparecen en su sitio, de abajo arriba. Si llevas más de las que faltan, el resto se queda en tu cesta para otra figura.
-- **Toque final:** cada figura tiene 1 o 2 piezas especiales escondidas por el cuarto. Con una en la mano, miras la figura y pulsas E.
+- **Suelo:** unos 40 grupitos con exactamente las piezas que hacen falta (280). Los reparte una semilla fija, así que todos los jugadores los ven en el mismo sitio. Algunos están debajo de las mesas.
+- **Clasificar:** la máquina del centro separa por **color**, y cada cubeta es de un color.
+- **Construir:** cada mesa enseña la silueta de su figura. Al llevarle piezas de un color, los bloques de ese color aparecen en su sitio, de abajo arriba. Si llevas de más, el resto se queda en la cesta. Mirar una mesa con las manos vacías te dice qué le falta.
 - **Mejoras (con pegatinas):**
   - cesta más grande;
   - recoger a puñados;
   - manivela engrasada;
-  - ayudantes que llevan piezas del suelo a la tolva;
+  - ayudantes (muñequitos de cuerda que traen piezas a la tolva);
   - motorcito (la clasificadora gira sola);
-  - cinta transportadora (las piezas clasificadas van solas a las figuras).
-- **Coop (1–4):** todo es compartido. Los roles salen solos: unos recogen, otros clasifican y otros construyen o buscan las piezas especiales.
+  - cinta transportadora (las piezas clasificadas van solas a las mesas).
+- **Coop (1–4):** todo es compartido. Unos buscan y recogen, otros clasifican y otros montan.
 
-### Las 6 figuras
+### Las 10 figuras
 
 | Figura | Colores | Bloques | Pieza especial |
 |---|---|---|---|
-| Pato | amarillo, rojo | 59 | 2 ojos |
-| Gato | azul, blanco | 52 | 2 ojos |
-| Casita | blanco, rojo, azul | 55 | puerta |
-| Árbol | verde, marrón | 42 | manzana |
-| Barco | marrón, blanco | 44 | bandera |
-| Cohete | blanco, rojo | 58 | ventanilla |
+| Pato | amarillo, rosa | 27 | 2 ojos |
+| Gato | azul, crema | 32 | 2 ojos |
+| Casita | crema, rosa, azul | 41 | puerta |
+| Árbol | verde, marrón | 21 | manzana |
+| Barco | marrón, crema | 22 | bandera |
+| Cohete | crema, rosa | 25 | ventanilla |
+| Seta | rosa, crema | 20 | — |
+| Flor | amarillo, verde, rosa | 32 | — |
+| Pez | azul | 22 | ojo |
+| Taza | crema, marrón | 38 | — |
 
-Las maquetas están en `game/scripts/figure_data.gd` como capas de caracteres: se pueden cambiar o añadir figuras sin tocar código.
+Entre 20 y 41 piezas por figura: cada una se termina en pocos minutos y hay variedad. Las maquetas están en `game/scripts/figure_data.gd` como capas de caracteres. Se pueden cambiar o añadir figuras (y mesas en `world.tscn`) sin tocar código, y las piezas del suelo se recalculan solas.
 
 ---
 
@@ -61,8 +69,8 @@ Las maquetas están en `game/scripts/figure_data.gd` como capas de caracteres: s
 Lo nuestro:
 - **Clasificación a granel con máquinas** y automatización incremental (ayudantes, motorcito, cinta).
 - **Figuras que se montan solas** pieza a pieza al entregar colores.
-- **Escala de figurita** en un cuarto enorme.
-- **Estética de diorama** pastel.
+- **Buscar por la habitación**, con piezas especiales escondidas.
+- **Estética creamy y lofi** muy reconocible.
 
 **Ideas para diferenciarse más** (aparcadas para no complicar el prototipo):
 - **Figuras que cobran vida y ayudan** al terminarlas: el barco reparte piezas, el cohete despega al final...
@@ -73,7 +81,7 @@ Lo nuestro:
 ## 4. Marca registrada
 
 - No usar el nombre **LEGO** ni su logo: el juego habla de "piezas" o "bloques".
-- La forma de la **minifigura** de LEGO está registrada como marca en la UE. Nuestras figuritas son muñecos de madera simples (cuerpo, cabeza y ojos), con diseño propio.
+- La forma de la **minifigura** de LEGO está registrada como marca en la UE. Nuestros personajes son muñecos de madera simples (cuerpo, cabeza y ojos), con diseño propio.
 - Los bloques con pivotes son genéricos (las patentes caducaron hace décadas).
 
 ---
@@ -82,5 +90,5 @@ Lo nuestro:
 
 1. ¿Añadimos que las figuras terminadas cobren vida y ayuden?
 2. ¿Queremos alguna tensión suave (papá descalzo) o se queda 100 % cozy?
-3. ¿Más figuras o más grandes para el juego completo? Ahora son unas 300 piezas, que dan para una partida corta de prototipo.
+3. Para el juego completo: ¿más habitaciones (cada una con sus mesas y su ambiente) en vez de figuras más grandes?
 4. ¿Te vale *The Floor Is Bricks* como nombre? No he encontrado ningún juego que se llame así.

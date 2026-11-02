@@ -4,18 +4,18 @@ extends RefCounted
 ## Todos los números y textos de diseño en un solo sitio, para equilibrar sin
 ## tocar la lógica. Los valores son de prototipo (partida corta para probar).
 
-# Tamaño jugable del suelo (mitad en X y en Z, en metros).
-const ROOM_HALF_X := 17.0
-const ROOM_HALF_Z := 14.0
+# Tamaño jugable de la habitación (mitad en X y en Z, en metros).
+const ROOM_HALF_X := 8.5
+const ROOM_HALF_Z := 6.5
 
 # --- Piezas ---
-# Las piezas del suelo son exactamente las que hacen falta para las 6 figuras
+# Las piezas del suelo son exactamente las que hacen falta para las 10 figuras
 # (las cuenta FigureData a partir de las maquetas).
 const KINDS := ["yellow", "coral", "sky", "mint", "cream", "cocoa"]
 # Se usa como "piezas <nombre>".
 const KIND_NAMES := {
-	"mixed": "mezcladas", "yellow": "amarillas", "coral": "rojas", "sky": "azules",
-	"mint": "verdes", "cream": "blancas", "cocoa": "marrones",
+	"mixed": "mezcladas", "yellow": "amarillas", "coral": "rosas", "sky": "azules",
+	"mint": "verdes", "cream": "crema", "cocoa": "marrones",
 }
 const PIECES_PER_PAY := 1  # pegatinas por cada pieza colocada en una figura
 const ITEM_PAY := 5  # pegatinas por cada pieza especial colocada
@@ -38,7 +38,7 @@ const NOISE_DROP := 8.0
 
 # --- Ayudantes contratados ---
 const WORKER_CAPACITY := 4
-const WORKER_SPEED := 2.2
+const WORKER_SPEED := 1.4
 const WORKER_SCOOP_TIME := 1.2
 const WORKER_DUMP_TIME := 0.6
 

@@ -1,8 +1,8 @@
 # The Floor Is Bricks: prototipo (Godot 4.7)
 
-> El suelo del cuarto de Mateo está cubierto de piezas de construcción. Sois sus figuritas: recogedlas, clasificadlas por color y montad las 6 figuras antes de que alguien pise una.
+> Una habitación tranquila al atardecer con 10 mesas y el suelo lleno de piezas. Búscalas, clasifícalas por color y monta una figura en cada mesa antes de que alguien pise una.
 
-Prototipo con estilo **cozy y minimalista**: todo son bloques y formas geométricas con colores pastel, generados por código.
+Prototipo con estilo **creamy, lofi y minimalista**: todo son bloques y formas geométricas en tonos crema, generados por código.
 
 > ⚠️ Este proyecto se escribe sin poder ejecutar Godot (el entorno donde se crea no lo permite). Pasa revisiones estáticas de sintaxis y estructura, pero **puede salir algún error** al abrirlo. Copia el mensaje del panel *Output*/*Debugger* tal cual y se arregla rápido.
 
@@ -35,14 +35,14 @@ Para jugar con un amigo por internet en el prototipo, el host tiene que abrir el
 ## El bucle
 
 ```
-Montones del suelo ──[E recoger]──► cesta de piezas mezcladas
-   ──► tolva de la clasificadora ──[mantener E en la manivela]──► 6 cubetas, una por color
-   ──[E coger un color]──► figura que lo necesite ──► los bloques aparecen en su sitio
-Piezas especiales (ojos, puerta, manzana, bandera, ventanilla) ──[E coger]──► mira su figura y E
+Grupitos de piezas por el suelo ──[E recoger]──► cesta de piezas mezcladas
+   ──► tolva de la clasificadora (en el centro) ──[mantener E en la manivela]──► 6 cubetas, una por color
+   ──[E coger un color]──► mesa cuya figura lo necesite ──► los bloques aparecen en su sitio
+Piezas especiales (ojos, puerta, manzana, bandera, ventanilla, con un brillito) ──[E coger]──► mira su mesa y E
 Pegatinas ──► tablón de MEJORAS (compartidas): cesta, puñados, manivela, ayudantes, motorcito, cinta
 ```
 
-**Objetivo:** montar las 6 figuras (310 piezas + 8 piezas especiales). Mirar una figura sin llevar nada te dice qué colores le faltan.
+**Objetivo:** montar las 10 figuras (280 piezas + 9 piezas especiales). Mira también debajo de las mesas. Mirar una mesa sin llevar nada te dice qué colores le faltan.
 
 ## Dónde tocar cada cosa
 
@@ -50,9 +50,10 @@ Pegatinas ──► tablón de MEJORAS (compartidas): cesta, puñados, manivela,
 |---|---|
 | **Las figuras** (forma, colores, piezas especiales) | `scripts/figure_data.gd`: cada figura son capas de caracteres, fáciles de editar |
 | Números (precios, velocidades, cuántas piezas se cogen...) | `scripts/balance.gd` |
-| Dónde está cada cosa (figuras, montones, máquina, piezas especiales) | `scenes/world.tscn` (ábrelo en el editor y mueve los nodos) |
+| Dónde está cada cosa (mesas, máquina, piezas especiales) | `scenes/world.tscn` (ábrelo en el editor y mueve los nodos) |
+| Cuántos grupitos de piezas hay y por dónde | `scripts/floor_scatter.gd` (y su nodo `FloorScatter` en `world.tscn`) |
 | Colores, materiales y el bloque con pivotes | `scripts/visuals.gd` |
-| El cuarto (suelo, luz, cielo, muebles) | `scripts/room.gd` |
+| La habitación (paredes, ventana, luces, muebles, filtro lofi) | `scripts/room.gd` |
 | Textos de la interfaz | `scripts/hud.gd` y `scripts/menu.gd` |
 
 Si añades o cambias figuras, las piezas del suelo se recalculan solas: siempre hay exactamente las que hacen falta.

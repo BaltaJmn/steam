@@ -1,14 +1,14 @@
 @tool
 extends Node3D
-## Montón de piezas mezcladas tiradas por el suelo. Se dibujan todas de golpe
-## (MultiMesh) y van desapareciendo según se recogen, empezando por las de
-## arriba. Las posiciones salen de una semilla fija, así que son iguales en
-## todos los jugadores sin tener que mandarlas por red.
+## Grupito de piezas mezcladas tiradas por el suelo (los reparte FloorScatter).
+## Se dibujan todas de golpe (MultiMesh) y van desapareciendo según se recogen,
+## empezando por las de arriba. Las posiciones salen de una semilla fija, así
+## que son iguales en todos los jugadores sin tener que mandarlas por red.
 
-const EDITOR_PREVIEW := 50
+const EDITOR_PREVIEW := 7
 
 @export var pile_id := 1
-@export var radius := 2.6
+@export var radius := 0.3
 
 var _multimesh: MultiMesh
 var _layout := []  # [[color, Transform3D], ...] ordenado de abajo arriba
@@ -29,11 +29,11 @@ func _ready() -> void:
 	area.collision_mask = 0
 	area.monitoring = false
 	var shape := CylinderShape3D.new()
-	shape.radius = radius + 0.3
-	shape.height = 0.3
+	shape.radius = radius + 0.15
+	shape.height = 0.25
 	var collision := CollisionShape3D.new()
 	collision.shape = shape
-	collision.position = Vector3(0, 0.15, 0)
+	collision.position = Vector3(0, 0.125, 0)
 	area.add_child(collision)
 	add_child(area)
 	if Engine.is_editor_hint():
@@ -70,7 +70,7 @@ func _build_layout(counts: Dictionary) -> void:
 	for kind in colors:
 		var angle := rng.randf_range(0.0, TAU)
 		var dist := sqrt(rng.randf()) * radius
-		var stack := int((1.0 - dist / radius) * 3.0 * rng.randf())
+		var stack := int((1.0 - dist / radius) * 2.0 * rng.randf())
 		var pos := Vector3(cos(angle) * dist, FigureData.BLOCK.y * (0.5 + stack * 0.8), sin(angle) * dist)
 		var basis := Basis(Vector3.UP, rng.randf_range(0.0, TAU))
 		basis = basis * Basis(Vector3.RIGHT, rng.randf_range(-0.2, 0.2)) * Basis(Vector3.FORWARD, rng.randf_range(-0.2, 0.2))
@@ -124,10 +124,10 @@ func get_prompt(_player: Node, _part: String) -> String:
 		return ""
 	var load_kind: String = data["load_kind"]
 	if int(data["item"]) != -1 or (load_kind != "" and load_kind != "mixed"):
-		return "Piezas por el suelo (tienes las manos ocupadas)"
+		return "Piezas (tienes las manos ocupadas)"
 	if Game.load_total(data) >= Game.capacity():
 		return "La cesta está llena: vacíala en la tolva de la clasificadora"
-	return "[E] Recoger piezas (mantén pulsado) · quedan %d" % total
+	return "[E] Recoger piezas (mantén pulsado) · aquí hay %d" % total
 
 
 func interact(player: Node, _part: String) -> void:

@@ -20,7 +20,7 @@ func _ready() -> void:
 
 func _build() -> void:
 	var background := ColorRect.new()
-	background.color = Color(0.98, 0.95, 0.9)
+	background.color = Color(0.96, 0.92, 0.86)
 	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(background)
 
@@ -33,13 +33,13 @@ func _build() -> void:
 	center.add_child(box)
 
 	var title := Label.new()
-	title.text = "THE FLOOR IS BRICKS"
+	title.text = "the floor is bricks"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 56)
-	title.add_theme_color_override("font_color", Color(0.9, 0.48, 0.42))
+	title.add_theme_color_override("font_color", Color(0.72, 0.5, 0.45))
 	box.add_child(title)
 	var subtitle := Label.new()
-	subtitle.text = "Prototipo · recoge las piezas del suelo y monta las 6 figuras"
+	subtitle.text = "prototipo · busca las piezas por el suelo y monta las 10 figuras"
 	subtitle.add_theme_color_override("font_color", Color(0.4, 0.38, 0.45))
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(subtitle)

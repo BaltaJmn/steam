@@ -1,108 +1,248 @@
 @tool
 extends Node3D
-## El cuarto, como un diorama cozy y minimalista: suelo de madera clara con una
-## alfombra, luz cálida de tarde con sombras suaves y, al fondo, muebles
-## enormes (somos figuritas): la cama, una pila de libros, una planta y la caja
-## de juguetes volcada de donde salieron las piezas.
+## La habitación: creamy, lofi y minimalista. Paredes y techo crema, suelo de
+## madera clara, una ventana con luz de atardecer, lámparas colgantes cálidas,
+## dos alfombras bajo las filas de mesas, plantas, una estantería, un
+## tocadiscos y un filtro suave de grano y viñeta.
 
-const WALL_HEIGHT := 4.0
+const HALF_X := 9.0
+const HALF_Z := 7.0
+const HEIGHT := 3.2
+const WALL := 0.2
+const WINDOW_Z := 2.5  # la ventana va de -WINDOW_Z a WINDOW_Z en la pared izquierda
+const WINDOW_BOTTOM := 0.9
+const WINDOW_TOP := 2.5
+
+# Filtro lofi: un toque crema, viñeta suave y grano.
+const LOFI_SHADER := """
+shader_type canvas_item;
+
+uniform sampler2D screen_texture : hint_screen_texture, filter_linear_mipmap;
+uniform float vignette_strength = 0.35;
+uniform float grain_strength = 0.035;
+uniform vec3 cream = vec3(0.98, 0.94, 0.87);
+uniform float cream_mix = 0.07;
+
+float noise(vec2 co) {
+	return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
+void fragment() {
+	vec3 color = texture(screen_texture, SCREEN_UV).rgb;
+	color = mix(color, cream, cream_mix);
+	vec2 centered = SCREEN_UV - vec2(0.5);
+	color *= 1.0 - dot(centered, centered) * vignette_strength * 2.0;
+	color += (noise(SCREEN_UV + vec2(TIME * 0.37, TIME * 0.11)) - 0.5) * grain_strength;
+	COLOR = vec4(color, 1.0);
+}
+"""
 
 
 func _ready() -> void:
-	var half_x := Balance.ROOM_HALF_X + 1.0
-	var half_z := Balance.ROOM_HALF_Z + 1.0
 	_build_environment()
-	_build_sun()
-	# Suelo (más grande hacia el fondo para que quepan los muebles) y alfombra
-	var floor_size := Vector3(46, 1, 46)
-	var floor_pos := Vector3(0, -0.5, -4)
-	Visuals.mesh_instance(self, Visuals.box_mesh(floor_size), floor_pos, "floor")
-	Visuals.static_box(self, floor_size, floor_pos, Visuals.LAYER_WORLD)
-	var rug := CylinderMesh.new()
-	rug.top_radius = 13.0
-	rug.bottom_radius = 13.0
-	rug.height = 0.04
-	rug.radial_segments = 64
-	Visuals.mesh_instance(self, rug, Vector3(0, 0.02, 0), "rug")
-	# Paredes invisibles en el borde de la zona de juego
-	for side in [-1.0, 1.0]:
-		Visuals.static_box(self, Vector3(1, WALL_HEIGHT, half_z * 2), Vector3(side * (half_x + 0.5), WALL_HEIGHT / 2.0, 0), Visuals.LAYER_WORLD)
-		Visuals.static_box(self, Vector3(half_x * 2, WALL_HEIGHT, 1), Vector3(0, WALL_HEIGHT / 2.0, side * (half_z + 0.5)), Visuals.LAYER_WORLD)
+	_build_shell()
+	_build_window()
+	_build_lamps()
 	_build_furniture()
+	if not Engine.is_editor_hint():
+		_build_lofi_filter()
 
 
 func _build_environment() -> void:
-	var sky_material := ProceduralSkyMaterial.new()
-	sky_material.sky_top_color = Color(0.76, 0.83, 0.95)
-	sky_material.sky_horizon_color = Color(0.99, 0.91, 0.85)
-	sky_material.ground_horizon_color = Color(0.99, 0.91, 0.85)
-	sky_material.ground_bottom_color = Color(0.93, 0.85, 0.8)
-	var sky := Sky.new()
-	sky.sky_material = sky_material
 	var env := Environment.new()
-	env.background_mode = Environment.BG_SKY
-	env.sky = sky
-	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	env.ambient_light_energy = 0.8
+	env.background_mode = Environment.BG_COLOR
+	env.background_color = Color(0.96, 0.92, 0.86)
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = Color(0.98, 0.9, 0.82)
+	env.ambient_light_energy = 0.55
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	env.tonemap_exposure = 1.0
+	env.tonemap_exposure = 1.05
 	env.ssao_enabled = true
-	env.ssao_radius = 1.5
-	env.ssao_intensity = 1.2
+	env.ssao_radius = 0.8
+	env.ssao_intensity = 1.4
 	env.ssil_enabled = true
 	env.glow_enabled = true
-	env.glow_intensity = 0.3
-	env.glow_bloom = 0.02
+	env.glow_intensity = 0.35
+	env.glow_bloom = 0.03
+	env.glow_hdr_threshold = 0.9
+	env.volumetric_fog_enabled = true
+	env.volumetric_fog_density = 0.012
+	env.volumetric_fog_albedo = Color(1.0, 0.95, 0.88)
+	env.adjustment_enabled = true
+	env.adjustment_saturation = 0.9
+	env.adjustment_contrast = 0.95
 	var world_environment := WorldEnvironment.new()
 	world_environment.environment = env
 	add_child(world_environment)
 
 
-## Luz de tarde entrando por la ventana: cálida, baja y con sombras suaves.
-func _build_sun() -> void:
-	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-48, 35, 0)
-	sun.light_color = Color(1.0, 0.93, 0.83)
-	sun.light_energy = 1.3
-	sun.shadow_enabled = true
-	sun.light_angular_distance = 1.5
-	sun.directional_shadow_max_distance = 70.0
+## Suelo, techo, paredes (la izquierda con el hueco de la ventana) y rodapiés.
+func _build_shell() -> void:
+	var width := HALF_X * 2.0 + WALL * 2.0
+	var depth := HALF_Z * 2.0 + WALL * 2.0
+	_solid(Vector3(width, 0.2, depth), Vector3(0, -0.1, 0), "floor")
+	_solid(Vector3(width, 0.2, depth), Vector3(0, HEIGHT + 0.1, 0), "wall")
+	_solid(Vector3(width, HEIGHT, WALL), Vector3(0, HEIGHT / 2.0, -HALF_Z - WALL / 2.0), "wall")
+	_solid(Vector3(width, HEIGHT, WALL), Vector3(0, HEIGHT / 2.0, HALF_Z + WALL / 2.0), "wall")
+	_solid(Vector3(WALL, HEIGHT, HALF_Z * 2.0), Vector3(HALF_X + WALL / 2.0, HEIGHT / 2.0, 0), "wall")
+	var left_x := -HALF_X - WALL / 2.0
+	var side_length := HALF_Z - WINDOW_Z
+	for side in [-1.0, 1.0]:
+		_solid(Vector3(WALL, HEIGHT, side_length), Vector3(left_x, HEIGHT / 2.0, side * (WINDOW_Z + side_length / 2.0)), "wall")
+	_solid(Vector3(WALL, WINDOW_BOTTOM, WINDOW_Z * 2.0), Vector3(left_x, WINDOW_BOTTOM / 2.0, 0), "wall")
+	_solid(Vector3(WALL, HEIGHT - WINDOW_TOP, WINDOW_Z * 2.0), Vector3(left_x, (WINDOW_TOP + HEIGHT) / 2.0, 0), "wall")
+	# Rodapiés
+	var board_h := 0.08
+	for side in [-1.0, 1.0]:
+		Visuals.mesh_instance(self, Visuals.box_mesh(Vector3(HALF_X * 2.0, board_h, 0.03)), Vector3(0, board_h / 2.0, side * (HALF_Z - 0.015)), "baseboard")
+		Visuals.mesh_instance(self, Visuals.box_mesh(Vector3(0.03, board_h, HALF_Z * 2.0)), Vector3(side * (HALF_X - 0.015), board_h / 2.0, 0), "baseboard")
+
+
+func _solid(size: Vector3, pos: Vector3, material_key: String) -> void:
+	Visuals.mesh_instance(self, Visuals.box_mesh(size), pos, material_key)
+	Visuals.static_box(self, size, pos, Visuals.LAYER_WORLD)
+
+
+## Ventana con cielo de atardecer y la luz del sol entrando en diagonal.
+func _build_window() -> void:
+	var window_height := WINDOW_TOP - WINDOW_BOTTOM
+	var center_y := (WINDOW_BOTTOM + WINDOW_TOP) / 2.0
+	var frame_x := -HALF_X - WALL / 2.0
+	Visuals.mesh_instance(self, Visuals.box_mesh(Vector3(0.02, window_height + 0.6, WINDOW_Z * 2.0 + 0.8)), Vector3(-HALF_X - WALL - 0.8, center_y, 0), "window_glow")
+	Visuals.mesh_instance(self, Visuals.box_mesh(Vector3(0.06, window_height, 0.06)), Vector3(frame_x, center_y, 0), "wall")
+	Visuals.mesh_instance(self, Visuals.box_mesh(Vector3(0.06, 0.06, WINDOW_Z * 2.0)), Vector3(frame_x, center_y, 0), "wall")
+	Visuals.mesh_instance(self, Visuals.box_mesh(Vector3(0.35, 0.05, WINDOW_Z * 2.0 + 0.2)), Vector3(-HALF_X + 0.05, WINDOW_BOTTOM, 0), "baseboard")
+	var sun := SpotLight3D.new()
 	add_child(sun)
+	sun.look_at_from_position(Vector3(-HALF_X - 4.0, 3.2, -1.5), Vector3(-3.0, 0.0, 1.0), Vector3.UP)
+	sun.light_color = Color(1.0, 0.8, 0.6)
+	sun.light_energy = 6.0
+	sun.spot_range = 18.0
+	sun.spot_angle = 30.0
+	sun.shadow_enabled = true
+	sun.light_volumetric_fog_energy = 2.0
+
+
+## Tres lámparas colgantes sobre el pasillo central y una de pie junto a la ventana.
+func _build_lamps() -> void:
+	for x in [-5.0, 0.0, 5.0]:
+		var cable := CylinderMesh.new()
+		cable.top_radius = 0.01
+		cable.bottom_radius = 0.01
+		cable.height = 0.6
+		Visuals.mesh_instance(self, cable, Vector3(x, HEIGHT - 0.3, 0), "ink")
+		var shade := CylinderMesh.new()
+		shade.top_radius = 0.06
+		shade.bottom_radius = 0.26
+		shade.height = 0.22
+		shade.radial_segments = 24
+		Visuals.mesh_instance(self, shade, Vector3(x, HEIGHT - 0.7, 0), "lamp_shade")
+		var bulb := SphereMesh.new()
+		bulb.radius = 0.06
+		bulb.height = 0.12
+		Visuals.mesh_instance(self, bulb, Vector3(x, HEIGHT - 0.8, 0), "bulb")
+		var light := OmniLight3D.new()
+		light.position = Vector3(x, HEIGHT - 0.9, 0)
+		light.light_color = Color(1.0, 0.86, 0.66)
+		light.light_energy = 0.9
+		light.omni_range = 7.5
+		light.shadow_enabled = x == 0.0
+		add_child(light)
+	var lamp_pos := Vector3(-8.3, 0, -4.0)
+	var pole := CylinderMesh.new()
+	pole.top_radius = 0.02
+	pole.bottom_radius = 0.02
+	pole.height = 1.6
+	Visuals.mesh_instance(self, pole, lamp_pos + Vector3(0, 0.8, 0), "ink")
+	var floor_shade := CylinderMesh.new()
+	floor_shade.top_radius = 0.14
+	floor_shade.bottom_radius = 0.22
+	floor_shade.height = 0.3
+	Visuals.mesh_instance(self, floor_shade, lamp_pos + Vector3(0, 1.7, 0), "lamp_shade")
+	var floor_light := OmniLight3D.new()
+	floor_light.position = lamp_pos + Vector3(0, 1.55, 0)
+	floor_light.light_color = Color(1.0, 0.84, 0.62)
+	floor_light.light_energy = 0.6
+	floor_light.omni_range = 5.0
+	add_child(floor_light)
 
 
 func _build_furniture() -> void:
-	# La cama de Mateo, al fondo a la izquierda.
-	Visuals.mesh_instance(self, Visuals.box_mesh(Vector3(16, 6, 10)), Vector3(-10, 3, -21), "blanket")
-	var pillow := CapsuleMesh.new()
-	pillow.radius = 1.8
-	pillow.height = 9.0
-	var pillow_instance := Visuals.mesh_instance(self, pillow, Vector3(-16, 7.6, -21), "pillow")
-	pillow_instance.rotation_degrees = Vector3(90, 0, 0)
-	# Pila de libros, al fondo a la derecha.
-	var books := [["book_a", Vector3(9, 1.6, 7), 0.0], ["book_b", Vector3(8, 1.4, 6.5), 8.0], ["book_c", Vector3(8.5, 1.2, 6), -5.0]]
-	var height := 0.0
-	for book in books:
-		var size: Vector3 = book[1]
-		var instance := Visuals.mesh_instance(self, Visuals.box_mesh(size), Vector3(13, height + size.y / 2.0, -20), book[0])
-		instance.rotation_degrees = Vector3(0, book[2], 0)
-		height += size.y
-	# Una planta en la esquina.
+	# Alfombras bajo las dos filas de mesas.
+	for rug in [[-3.2, "rug_a"], [3.2, "rug_b"]]:
+		var disc := CylinderMesh.new()
+		disc.top_radius = 1.0
+		disc.bottom_radius = 1.0
+		disc.height = 0.02
+		disc.radial_segments = 48
+		var instance := Visuals.mesh_instance(self, disc, Vector3(0, 0.01, rug[0]), rug[1])
+		instance.scale = Vector3(8.0, 1.0, 1.7)
+	# Plantas
+	for pos in [Vector3(-8.2, 0, -6.2), Vector3(8.2, 0, 6.2), Vector3(-8.2, 0, 5.8)]:
+		_plant(pos)
+	# Estantería en la pared del fondo, con libros encima.
+	var shelf_pos := Vector3(0, 0.9, -HALF_Z + 0.2)
+	Visuals.mesh_instance(self, Visuals.box_mesh(Vector3(2.6, 1.8, 0.35)), shelf_pos, "table")
+	Visuals.static_box(self, Vector3(2.6, 1.8, 0.35), shelf_pos, Visuals.LAYER_WORLD)
+	var book_colors := ["poster_a", "poster_b", "poster_c", "rug_a", "poster_a", "cream"]
+	for i in book_colors.size():
+		var book_height := 0.24 + 0.04 * float(i % 3)
+		var book_pos := Vector3(-1.0 + i * 0.1, 1.8 + book_height / 2.0, -HALF_Z + 0.2)
+		Visuals.mesh_instance(self, Visuals.box_mesh(Vector3(0.08, book_height, 0.22)), book_pos, book_colors[i])
+	# Cuadros en la pared derecha.
+	for poster in [[0.6, "poster_b"], [4.5, "poster_a"]]:
+		var poster_pos := Vector3(HALF_X - 0.02, 1.75, poster[0])
+		Visuals.mesh_instance(self, Visuals.box_mesh(Vector3(0.03, 0.9, 0.7)), poster_pos, "baseplate")
+		Visuals.mesh_instance(self, Visuals.box_mesh(Vector3(0.035, 0.74, 0.54)), poster_pos, poster[1])
+	_record_player(Vector3(8.45, 0, 4.5))
+
+
+func _plant(pos: Vector3) -> void:
 	var pot := CylinderMesh.new()
-	pot.top_radius = 2.6
-	pot.bottom_radius = 2.0
-	pot.height = 3.5
-	pot.radial_segments = 32
-	Visuals.mesh_instance(self, pot, Vector3(19, 1.75, 13), "pot")
-	for leaf in [Vector3(19, 5.0, 13), Vector3(17.6, 4.2, 12.2), Vector3(20.2, 4.4, 14.0)]:
+	pot.top_radius = 0.28
+	pot.bottom_radius = 0.22
+	pot.height = 0.45
+	pot.radial_segments = 24
+	Visuals.mesh_instance(self, pot, pos + Vector3(0, 0.225, 0), "pot")
+	Visuals.static_box(self, Vector3(0.5, 0.45, 0.5), pos + Vector3(0, 0.225, 0), Visuals.LAYER_WORLD)
+	for leaf in [[Vector3(0, 0.75, 0), 0.4], [Vector3(-0.2, 0.6, 0.12), 0.3], [Vector3(0.2, 0.62, -0.1), 0.32]]:
 		var sphere := SphereMesh.new()
-		sphere.radius = 1.8
-		sphere.height = 3.2
-		Visuals.mesh_instance(self, sphere, leaf, "plant")
-	# La caja de juguetes volcada (de aquí salieron las piezas).
-	var toy_box := Node3D.new()
-	toy_box.position = Vector3(-19, 0, 13)
-	toy_box.rotation_degrees = Vector3(0, 25, 0)
-	add_child(toy_box)
-	Visuals.mesh_instance(toy_box, Visuals.box_mesh(Vector3(6, 0.3, 5)), Vector3(0, 0.15, 0), "sky")
-	for wall in [[Vector3(6, 3.5, 0.3), Vector3(0, 1.75, -2.35)], [Vector3(0.3, 3.5, 5), Vector3(-2.85, 1.75, 0)], [Vector3(0.3, 3.5, 5), Vector3(2.85, 1.75, 0)]]:
-		Visuals.mesh_instance(toy_box, Visuals.box_mesh(wall[0]), wall[1], "sky")
+		sphere.radius = leaf[1]
+		sphere.height = leaf[1] * 2.0
+		Visuals.mesh_instance(self, sphere, pos + leaf[0], "plant")
+
+
+## Mueble bajo con un tocadiscos (el guiño lofi).
+func _record_player(pos: Vector3) -> void:
+	var cabinet := Vector3(0.6, 0.65, 1.3)
+	Visuals.mesh_instance(self, Visuals.box_mesh(cabinet), pos + Vector3(0, cabinet.y / 2.0, 0), "table")
+	Visuals.static_box(self, cabinet, pos + Vector3(0, cabinet.y / 2.0, 0), Visuals.LAYER_WORLD)
+	Visuals.mesh_instance(self, Visuals.box_mesh(Vector3(0.42, 0.06, 0.46)), pos + Vector3(0, 0.68, 0), "baseplate")
+	var record := CylinderMesh.new()
+	record.top_radius = 0.17
+	record.bottom_radius = 0.17
+	record.height = 0.012
+	record.radial_segments = 32
+	Visuals.mesh_instance(self, record, pos + Vector3(0, 0.717, 0), "ink")
+	var label := CylinderMesh.new()
+	label.top_radius = 0.05
+	label.bottom_radius = 0.05
+	label.height = 0.014
+	Visuals.mesh_instance(self, label, pos + Vector3(0, 0.718, 0), "coral")
+	var arm := Visuals.mesh_instance(self, Visuals.box_mesh(Vector3(0.02, 0.02, 0.22)), pos + Vector3(0.15, 0.74, 0.05), "metal")
+	arm.rotation_degrees = Vector3(0, 20, 0)
+
+
+func _build_lofi_filter() -> void:
+	var layer := CanvasLayer.new()
+	layer.layer = 0  # por debajo de la interfaz, que no lleva grano
+	add_child(layer)
+	var shader := Shader.new()
+	shader.code = LOFI_SHADER
+	var material := ShaderMaterial.new()
+	material.shader = shader
+	var rect := ColorRect.new()
+	rect.material = material
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	layer.add_child(rect)

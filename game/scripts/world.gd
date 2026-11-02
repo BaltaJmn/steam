@@ -43,7 +43,7 @@ func _register_anchors() -> void:
 	var board := get_tree().get_first_node_in_group("upgrade_board") as Node3D
 	if sorter:
 		# Detrás de la máquina, donde está la boca de la tolva.
-		Game.anchors["hopper_point"] = sorter.global_position - sorter.global_transform.basis.z * 1.4
+		Game.anchors["hopper_point"] = sorter.global_position - sorter.global_transform.basis.z * 0.6
 	if board:
 		Game.anchors["worker_spawn"] = board.global_position + board.global_transform.basis.z * 1.5
 	var pile_points := {}

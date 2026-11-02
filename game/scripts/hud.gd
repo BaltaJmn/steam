@@ -14,8 +14,8 @@ var _wallet_label: Label
 var _pause_panel: PanelContainer
 var _toast_tween: Tween
 
-const TEXT_COLOR := Color(0.22, 0.21, 0.27)
-const PANEL_COLOR := Color(1.0, 0.99, 0.97, 0.75)
+const TEXT_COLOR := Color(0.33, 0.29, 0.3)
+const PANEL_COLOR := Color(0.99, 0.96, 0.91, 0.72)
 var _upgrade_buttons := {}  # id de mejora -> Button
 var _shown_levels := ""
 
@@ -112,7 +112,7 @@ func _build() -> void:
 	_place(_toast, 0, 0.26, 1, 0.26, 0, 0, 0, 44)
 
 	_win = _label(root, 44, HORIZONTAL_ALIGNMENT_CENTER)
-	_win.text = "¡Las 6 figuras montadas y el suelo impecable! Mañana nadie pisará una pieza."
+	_win.text = "todas las figuras montadas y el suelo impecable. mañana nadie pisará una pieza."
 	_win.add_theme_color_override("font_color", Color(0.85, 0.42, 0.38))
 	_win.visible = false
 	_place(_win, 0, 0.14, 1, 0.14, 0, 0, 0, 60)
@@ -291,15 +291,18 @@ func _refresh_all() -> void:
 ## Progreso y dónde está cada pieza ahora mismo, para que se vea avanzar cada paso.
 func _refresh_info() -> void:
 	var lines := PackedStringArray()
-	lines.append("Figuras terminadas: %d / %d" % [Game.figures_done(), Game.figures.size()])
-	lines.append("Piezas colocadas: %d / %d" % [Game.pieces_placed(), Game.pieces_total()])
-	lines.append("   Suelo: %d · Tolva: %d · Cubetas: %d" % [
+	lines.append("figuras  %d / %d" % [Game.figures_done(), Game.figures.size()])
+	lines.append("piezas  %d / %d" % [Game.pieces_placed(), Game.pieces_total()])
+	lines.append("en el suelo %d · tolva %d · cubetas %d" % [
 		Game.floor_total(), Game.piece_sum(Game.hopper), Game.piece_sum(Game.bins),
 	])
-	lines.append("Pegatinas: %d" % Game.wallet)
+	var hidden := Game.items.size() - Game.items_placed()
+	if hidden > 0:
+		lines.append("piezas especiales por poner  %d" % hidden)
+	lines.append("pegatinas  %d" % Game.wallet)
 	var workers := int(Game.upgrade_value("workers"))
 	if workers > 0:
-		lines.append("Ayudantes: %d" % workers)
+		lines.append("ayudantes  %d" % workers)
 	_info.text = "\n".join(lines)
 
 

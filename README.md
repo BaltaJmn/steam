@@ -2,7 +2,7 @@
 
 > Todo el mundo sabe lo que pasa cuando pisas una.
 
-Juego coop (1–4), simple, cozy y minimalista para Steam. El suelo del cuarto de un niño está cubierto de piezas de construcción mezcladas. Sois figuritas: hay que recogerlas, clasificarlas por color con una máquina y montar 6 figuras sencillas (pato, gato, casita, árbol, barco y cohete), con mejoras y ayudantes que automatizan el trabajo.
+Juego coop (1–4), simple, creamy, lofi y minimalista para Steam. Una habitación tranquila al atardecer con 10 mesas y el suelo lleno de piezas de construcción mezcladas. Hay que buscarlas, clasificarlas por color con una máquina y montar en cada mesa una figura sencilla, con mejoras y ayudantes que automatizan el trabajo.
 
 - 🎮 [**Prototipo jugable (Godot 4.7)**](game/README.md): cómo abrirlo, probar el coop y qué tocar
 - 📄 [**Diseño actual**](docs/concepto-bloques.md)

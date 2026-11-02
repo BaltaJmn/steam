@@ -1,14 +1,20 @@
 @tool
 extends Node3D
-## Obra de una figura: la base, la silueta transparente de los bloques que
-## faltan y los bloques ya montados. Las piezas se entregan por color y cada
-## bloque aparece en su sitio en orden de montaje (de abajo arriba). Las piezas
-## especiales (ojos, puerta...) van en sus huecos. La parte de delante mira a +Z.
+## Mesa de una figura: una mesa sencilla con la figura encima. Enseña la
+## silueta transparente de los bloques que faltan y los bloques ya montados.
+## Las piezas se entregan por color y cada bloque aparece en su sitio en orden
+## de montaje (de abajo arriba). Las piezas especiales (ojos, puerta...) van en
+## sus huecos. Toda la mesa es interactuable. La parte de delante mira a +Z.
 
 const SLOT_SCRIPT := preload("res://scripts/slot.gd")
-const BASE_HEIGHT := 0.12
+const TABLE_WIDTH := 1.3
+const TABLE_HEIGHT := 0.75
+const TABLE_DEPTH := 0.85
+const TOP_THICKNESS := 0.05
+const BOARD_HEIGHT := 0.02  # tablilla clara sobre la que se monta la figura
+const BASE_HEIGHT := TABLE_HEIGHT + BOARD_HEIGHT
 
-@export_enum("duck", "cat", "house", "tree", "boat", "rocket") var model: String = "duck"
+@export_enum("duck", "cat", "house", "tree", "boat", "rocket", "mushroom", "flower", "fish", "mug") var model: String = "duck"
 @export var figure_id := 1
 @export var first_slot_id := 1
 
@@ -37,9 +43,9 @@ func _build() -> void:
 	_blocks = FigureData.blocks(model)
 	var cells := FigureData.cells(model)
 	var size := Vector3(cells.x * FigureData.BLOCK.x, cells.y * FigureData.BLOCK.y, cells.z * FigureData.BLOCK.z)
-	Visuals.mesh_instance(self, Visuals.box_mesh(Vector3(size.x + 1.2, BASE_HEIGHT, size.z + 1.2)), Vector3(0, BASE_HEIGHT / 2.0, 0), "baseplate")
+	_build_table(size)
 	Visuals.static_box(
-		self, Vector3(size.x + 0.4, size.y + BASE_HEIGHT, size.z + 0.4), Vector3(0, (size.y + BASE_HEIGHT) / 2.0, 0),
+		self, Vector3(size.x + 0.1, size.y + 0.05, size.z + 0.1), Vector3(0, BASE_HEIGHT + (size.y + 0.05) / 2.0, 0),
 		Visuals.LAYER_WORLD | Visuals.LAYER_INTERACT
 	)
 	_body = Node3D.new()
@@ -52,7 +58,7 @@ func _build() -> void:
 		instance.multimesh = pair[0]
 		instance.material_override = Visuals.mat(pair[1])
 		_body.add_child(instance)
-	_label = Visuals.label(self, "", Vector3(0, size.y + 1.0, 0), 64)
+	_label = Visuals.label(self, "", Vector3(0, BASE_HEIGHT + size.y + 0.25, 0), 36)
 
 	# Huecos de las piezas especiales.
 	var specials: Array = FigureData.MODELS[model]["specials"]
@@ -68,38 +74,55 @@ func _build() -> void:
 		add_child(slot)
 
 	_confetti = GPUParticles3D.new()
-	_confetti.position = Vector3(0, size.y + 0.5, 0)
+	_confetti.position = Vector3(0, BASE_HEIGHT + size.y + 0.1, 0)
 	_confetti.one_shot = true
 	_confetti.emitting = false
-	_confetti.amount = 60
-	_confetti.lifetime = 1.6
+	_confetti.amount = 40
+	_confetti.lifetime = 1.4
 	_confetti.explosiveness = 0.9
 	var confetti_process := ParticleProcessMaterial.new()
 	confetti_process.direction = Vector3(0, 1, 0)
-	confetti_process.spread = 70.0
-	confetti_process.initial_velocity_min = 3.0
-	confetti_process.initial_velocity_max = 6.0
-	confetti_process.gravity = Vector3(0, -6.0, 0)
+	confetti_process.spread = 60.0
+	confetti_process.initial_velocity_min = 1.2
+	confetti_process.initial_velocity_max = 2.4
+	confetti_process.gravity = Vector3(0, -3.0, 0)
 	confetti_process.scale_min = 0.6
 	confetti_process.scale_max = 1.2
 	_confetti.process_material = confetti_process
-	var confetti_mesh := Visuals.box_mesh(Vector3(0.08, 0.08, 0.02))
+	var confetti_mesh := Visuals.box_mesh(Vector3(0.03, 0.03, 0.008))
 	confetti_mesh.material = Visuals.mat("yellow")
 	_confetti.draw_pass_1 = confetti_mesh
 	add_child(_confetti)
+
+
+## Mesa de madera clara con cuatro patas y una tablilla crema encima.
+func _build_table(figure_size: Vector3) -> void:
+	var top_y := TABLE_HEIGHT - TOP_THICKNESS / 2.0
+	var top := Vector3(TABLE_WIDTH, TOP_THICKNESS, TABLE_DEPTH)
+	Visuals.mesh_instance(self, Visuals.box_mesh(top), Vector3(0, top_y, 0), "table_top")
+	Visuals.static_box(self, top, Vector3(0, top_y, 0), Visuals.LAYER_WORLD)
+	var leg_height := TABLE_HEIGHT - TOP_THICKNESS
+	for sx in [-1.0, 1.0]:
+		for sz in [-1.0, 1.0]:
+			var pos := Vector3(sx * (TABLE_WIDTH / 2.0 - 0.07), leg_height / 2.0, sz * (TABLE_DEPTH / 2.0 - 0.07))
+			Visuals.mesh_instance(self, Visuals.box_mesh(Vector3(0.05, leg_height, 0.05)), pos, "table")
+			Visuals.static_box(self, Vector3(0.05, leg_height, 0.05), pos, Visuals.LAYER_WORLD)
+	var board := Vector3(figure_size.x + 0.12, BOARD_HEIGHT, figure_size.z + 0.12)
+	Visuals.mesh_instance(self, Visuals.box_mesh(board), Vector3(0, TABLE_HEIGHT + BOARD_HEIGHT / 2.0, 0), "baseplate")
 
 
 ## Dónde va cada pieza especial respecto a su celda.
 func _special_position(type_key: String, cell: Vector3i, face: String) -> Vector3:
 	var center := FigureData.cell_center(model, cell)
 	var height := Visuals.item_height(type_key)
+	var gap := FigureData.BLOCK.z * 0.1
 	match face:
 		"front":
-			return center + Vector3(0, -height / 2.0, FigureData.BLOCK.z / 2.0 + 0.06)
+			return center + Vector3(0, -height / 2.0, FigureData.BLOCK.z / 2.0 + gap)
 		"back":
-			return center + Vector3(0, -height / 2.0, -(FigureData.BLOCK.z / 2.0 + 0.06))
+			return center + Vector3(0, -height / 2.0, -(FigureData.BLOCK.z / 2.0 + gap))
 		"top":
-			return center + Vector3(0, FigureData.BLOCK.y / 2.0 + 0.05, 0)
+			return center + Vector3(0, FigureData.BLOCK.y / 2.0 + gap, 0)
 	# "inside": un hueco dentro de la figura (la puerta, la ventanilla).
 	return center + Vector3(0, -FigureData.BLOCK.y / 2.0, 0)
 

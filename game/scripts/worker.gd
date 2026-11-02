@@ -1,6 +1,6 @@
 extends Node3D
-## Ayudante contratado: una figurita amarilla más pequeña con su cesta. Solo es
-## visual: la lógica la lleva el host en Game. Mira hacia -Z.
+## Ayudante contratado: un muñequito de cuerda que va y viene con piezas. Solo
+## es visual: la lógica la lleva el host en Game. Mira hacia -Z.
 
 var _target := Vector3.ZERO
 var _carrying := false
@@ -12,6 +12,7 @@ var _time := 0.0
 func _ready() -> void:
 	_target = position
 	_body = Node3D.new()
+	_body.scale = Vector3.ONE * 0.45
 	add_child(_body)
 	var torso := CapsuleMesh.new()
 	torso.radius = 0.22
@@ -26,9 +27,10 @@ func _ready() -> void:
 		eye.radius = 0.028
 		eye.height = 0.056
 		Visuals.mesh_instance(_body, eye, Vector3(0.06 * side, 0.93, -0.16), "ink")
-	# Una pieza en brazos cuando lleva carga.
-	_load = Visuals.mesh_instance(_body, Visuals.brick_mesh(), Vector3(0, 0.5, -0.3), "coral")
-	_load.scale = Vector3.ONE * 0.5
+	# Llave de cuerda en la espalda y una pieza en brazos cuando lleva carga.
+	var key := Visuals.mesh_instance(_body, Visuals.box_mesh(Vector3(0.04, 0.2, 0.25)), Vector3(0, 0.5, 0.28), "metal")
+	_load = Visuals.mesh_instance(_body, Visuals.brick_mesh(), Vector3(0, 0.5, -0.32), "coral")
+	_load.scale = Vector3.ONE * 1.4
 	_load.visible = false
 
 
