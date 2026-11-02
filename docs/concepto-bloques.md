@@ -20,25 +20,25 @@ Una habitación tranquila al atardecer, con **10 mesas**. El suelo está **lleno
 ## 2. Cómo funciona
 
 ```
-Grupitos de piezas por el suelo ──[buscar y recoger]──► cesta de piezas mezcladas
-   ──► tolva de la clasificadora ──[manivela]──► 6 cubetas, una por color
-   ──[coger un color]──► mesa de una figura ──► los bloques aparecen en su sitio
+Grupitos de piezas por el suelo ──[buscar y recoger]──► cesta con piezas de varios colores
+   ──► cualquier mesa: su clasificador se queda solo las piezas que necesita
+       (el resto sigue en la cesta) ──► los bloques aparecen en su sitio
 Piezas especiales (ojos, puerta, manzana, bandera, ventanilla), escondidas y con un brillito
    ──[encontrar]──► con la pieza en la mano, mira su mesa y E
 Figura terminada ──► confeti y pegatinas extra ──► mejoras
 ```
 
 - **Suelo:** unos 40 grupitos con exactamente las piezas que hacen falta (280). Los reparte una semilla fija, así que todos los jugadores los ven en el mismo sitio. Algunos están debajo de las mesas.
-- **Clasificar:** la máquina del centro separa por **color**, y cada cubeta es de un color.
-- **Construir:** cada mesa enseña la silueta de su figura. Al llevarle piezas de un color, los bloques de ese color aparecen en su sitio, de abajo arriba. Si llevas de más, el resto se queda en la cesta. Mirar una mesa con las manos vacías te dice qué le falta.
-- **Mejoras (con pegatinas):**
+- **Clasificador en cada mesa:** delante de cada figura hay una bandeja con un compartimento por cada color que necesita. Cada compartimento tiene el fondo de su color, se va llenando de piezas y lleva su contador ("12/26"). De un vistazo se ve qué le falta a cada mesa.
+- **Entregar:** llegas a una mesa con la cesta y pulsas E. Se queda solo con lo que necesita y lo demás sigue en tu cesta para otra mesa. La interfaz te dice qué colores llevas.
+- **Construir:** los bloques aparecen en su sitio sobre la silueta transparente, de abajo arriba.
+- **Mejoras (con pegatinas), pensadas para buscar:**
   - cesta más grande;
   - recoger a puñados;
-  - manivela engrasada;
-  - ayudantes (muñequitos de cuerda que traen piezas a la tolva);
-  - motorcito (la clasificadora gira sola);
-  - cinta transportadora (las piezas clasificadas van solas a las mesas).
-- **Coop (1–4):** todo es compartido. Unos buscan y recogen, otros clasifican y otros montan.
+  - zapatillas cómodas (andas más rápido);
+  - lupa (los grupitos que quedan brillan);
+  - ayudantes de cuerda que recogen piezas y las llevan a las mesas que las necesitan.
+- **Coop (1–4):** todo es compartido. Cada uno puede encargarse de una zona de la habitación o de unas mesas.
 
 ### Las 10 figuras
 
@@ -67,7 +67,7 @@ Entre 20 y 41 piezas por figura: cada una se termina en pocos minutos y hay vari
 | [*Tidy Up: Bricks n Blocks*](https://store.steampowered.com/app/5516980) | Piezas por el suelo de habitaciones que se colocan en estanterías por forma y en cubos por color. Un jugador. Sale el 17 nov 2026 |
 
 Lo nuestro:
-- **Clasificación a granel con máquinas** y automatización incremental (ayudantes, motorcito, cinta).
+- **Un clasificador por mesa** que deja clarísimo qué necesita cada figura, y ayudantes de cuerda que automatizan el trabajo.
 - **Figuras que se montan solas** pieza a pieza al entregar colores.
 - **Buscar por la habitación**, con piezas especiales escondidas.
 - **Estética creamy y lofi** muy reconocible.

@@ -39,11 +39,7 @@ func _on_session_ended(reason: String) -> void:
 ## Puntos del mapa que necesitan los ayudantes (iguales en todos los
 ## jugadores, porque la escena es la misma).
 func _register_anchors() -> void:
-	var sorter := get_tree().get_first_node_in_group("sorter") as Node3D
 	var board := get_tree().get_first_node_in_group("upgrade_board") as Node3D
-	if sorter:
-		# Detrás de la máquina, donde está la boca de la tolva.
-		Game.anchors["hopper_point"] = sorter.global_position - sorter.global_transform.basis.z * 0.6
 	if board:
 		Game.anchors["worker_spawn"] = board.global_position + board.global_transform.basis.z * 1.5
 	var pile_points := {}
@@ -51,6 +47,12 @@ func _register_anchors() -> void:
 		var pile := node as Node3D
 		pile_points[int(pile.get("pile_id"))] = pile.global_position
 	Game.anchors["piles"] = pile_points
+	# Delante de cada mesa, junto a su clasificador.
+	var table_points := {}
+	for node in get_tree().get_nodes_in_group("figures"):
+		var table := node as Node3D
+		table_points[int(table.get("figure_id"))] = table.global_position + table.global_transform.basis.z * 0.85
+	Game.anchors["tables"] = table_points
 
 
 func _collect_pile_ids() -> Array:

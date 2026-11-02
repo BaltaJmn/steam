@@ -10,9 +10,8 @@ signal changed(what: String, id: int)
 signal game_event(ev_name: String, data: Dictionary)
 
 const REQUESTS := [
-	"_srv_hello", "_srv_scoop", "_srv_dump", "_srv_crank", "_srv_take_bag", "_srv_deposit",
-	"_srv_return_load", "_srv_pickup_item", "_srv_place_item", "_srv_drop_item", "_srv_buy",
-	"_srv_noise",
+	"_srv_hello", "_srv_scoop", "_srv_deposit", "_srv_return_load", "_srv_pickup_item",
+	"_srv_place_item", "_srv_drop_item", "_srv_buy", "_srv_noise",
 ]
 const PLAYER_COLORS := [
 	Color(0.96, 0.6, 0.55), Color(0.55, 0.72, 0.95), Color(0.6, 0.82, 0.62), Color(0.98, 0.82, 0.45),
@@ -22,8 +21,6 @@ const NET_INTERVAL := 0.1
 # --- Estado sincronizado (lo manda el host) ---
 var piles := {}  # id del montón -> {color: piezas}
 var piles_start := {}  # lo mismo al empezar (para dibujar los montones igual en todos)
-var hopper := {}  # {color: piezas} en la tolva
-var bins := {}  # {color: piezas} ya clasificadas
 var figures := {}  # id -> {model, need: {color: n}, have: {color: n}, done}
 var items := {}  # id -> {type, state: "loose"/"held"/"placed", pos, yaw, holder, slot}
 var slots := {}  # id -> {type, pos, yaw, item, figure}
@@ -37,7 +34,7 @@ var completed := false
 # --- Solo local ---
 var player_nodes := {}  # peer_id -> nodo Player
 var player_pos := {}  # peer_id -> última posición conocida
-var anchors := {}  # puntos del mapa que usan los ayudantes (montones, tolva...)
+var anchors := {}  # puntos del mapa que usan los ayudantes (montones y mesas)
 
 # --- Solo en el host ---
 var _world_ready := false
@@ -46,8 +43,6 @@ var _dirty := {}
 var _workers := []
 var _player_noise := {}
 var _last_action := {}
-var _wheel_acc := 0.0
-var _chute_acc := 0.0
 var _net_timer := 0.0
 var _noise_sent := -1.0
 var _join_count := 0
@@ -61,8 +56,6 @@ func _ready() -> void:
 func reset() -> void:
 	piles = {}
 	piles_start = {}
-	hopper = _zero_pieces()
-	bins = _zero_pieces()
 	figures = {}
 	items = {}
 	slots = {}
@@ -83,8 +76,6 @@ func reset() -> void:
 	_workers = []
 	_player_noise = {}
 	_last_action = {}
-	_wheel_acc = 0.0
-	_chute_acc = 0.0
 	_net_timer = 0.0
 	_noise_sent = -1.0
 	_join_count = 0
@@ -188,6 +179,14 @@ func figure_missing(figure_id: int, kind: String) -> int:
 		return 0
 	var figure: Dictionary = figures[figure_id]
 	return int(figure["need"].get(kind, 0)) - int(figure["have"].get(kind, 0))
+
+
+## Cuántas de estas piezas le sirven a la figura (lo que se quedaría al entregar).
+func figure_takes(figure_id: int, pieces: Dictionary) -> int:
+	var total := 0
+	for kind in Balance.KINDS:
+		total += mini(int(pieces.get(kind, 0)), figure_missing(figure_id, kind))
+	return total
 
 
 func figure_bricks_done(figure_id: int) -> bool:
@@ -295,10 +294,6 @@ func _get_part(key: String) -> Variant:
 	match parts[0]:
 		"pile":
 			return piles.get(id)
-		"hopper":
-			return hopper
-		"bins":
-			return bins
 		"figure":
 			return figures.get(id)
 		"economy":
@@ -319,10 +314,6 @@ func _rpc_part(key: String, value: Variant) -> void:
 	match parts[0]:
 		"pile":
 			piles[id] = value
-		"hopper":
-			hopper = value
-		"bins":
-			bins = value
 		"figure":
 			figures[id] = value
 		"economy":
@@ -348,7 +339,7 @@ func _emit_part(key: String) -> void:
 
 func _snapshot() -> Dictionary:
 	return {
-		"piles": piles, "piles_start": piles_start, "hopper": hopper, "bins": bins, "figures": figures, "items": items,
+		"piles": piles, "piles_start": piles_start, "figures": figures, "items": items,
 		"slots": slots, "players": players, "wallet": wallet, "upgrades": upgrades,
 		"noise": noise, "workers": workers_net, "completed": completed,
 	}
@@ -358,8 +349,6 @@ func _snapshot() -> Dictionary:
 func _rpc_snapshot(snapshot: Dictionary) -> void:
 	piles = snapshot["piles"]
 	piles_start = snapshot["piles_start"]
-	hopper = snapshot["hopper"]
-	bins = snapshot["bins"]
 	figures = snapshot["figures"]
 	items = snapshot["items"]
 	slots = snapshot["slots"]
@@ -441,77 +430,29 @@ func _srv_scoop(sender: int, pile_id: int) -> void:
 	_mark("player:%d" % sender)
 
 
-func _srv_dump(sender: int) -> void:
-	var p: Dictionary = players[sender]
-	if p["load_kind"] != "mixed":
-		return
-	_add_pieces(hopper, p["load"])
-	_clear_load(p)
-	_add_noise(sender, Balance.NOISE_DUMP)
-	_mark("hopper")
-	_mark("player:%d" % sender)
-
-
-func _srv_crank(sender: int) -> void:
-	if piece_sum(hopper) == 0:
-		return
-	if not _cooldown_ok(sender, "crank", Balance.CRANK_INTERVAL):
-		return
-	_sort_from_hopper(int(upgrade_value("crank")))
-	_add_noise(sender, Balance.NOISE_CRANK)
-
-
-func _srv_take_bag(sender: int, kind: String) -> void:
-	if kind not in Balance.KINDS:
-		return
-	var p: Dictionary = players[sender]
-	if int(p["item"]) != -1:
-		return
-	if p["load_kind"] != "" and p["load_kind"] != kind:
-		return
-	var amount := mini(capacity() - load_total(p), int(bins[kind]))
-	if amount <= 0:
-		return
-	bins[kind] = int(bins[kind]) - amount
-	p["load"][kind] = int(p["load"][kind]) + amount
-	p["load_kind"] = kind
-	_mark("bins")
-	_mark("player:%d" % sender)
-
-
-## Coloca en la figura las piezas que lleva el jugador (solo las que le faltan;
-## el resto se queda en la cesta para otra figura).
+## Deja en la mesa las piezas de la cesta que su figura necesita; el resto se
+## queda en la cesta para otra mesa.
 func _srv_deposit(sender: int, figure_id: int) -> void:
 	var p: Dictionary = players[sender]
-	var kind: String = p["load_kind"]
-	if kind not in Balance.KINDS or not figures.has(figure_id):
+	if p["load_kind"] == "" or not figures.has(figure_id):
 		return
-	var amount := mini(int(p["load"][kind]), figure_missing(figure_id, kind))
-	if amount <= 0:
+	if _give_to_figure(figure_id, p["load"]) == 0:
 		return
-	_place_pieces(figure_id, kind, amount)
-	p["load"][kind] = int(p["load"][kind]) - amount
-	if int(p["load"][kind]) <= 0:
+	if piece_sum(p["load"]) == 0:
 		_clear_load(p)
 	_mark("player:%d" % sender)
 
 
-## Soltar piezas: las mezcladas vuelven al montón más cercano y las
-## clasificadas a su cubeta.
+## Soltar piezas: vuelven al montón más cercano.
 func _srv_return_load(sender: int) -> void:
 	var p: Dictionary = players[sender]
-	match p["load_kind"]:
-		"":
-			return
-		"mixed":
-			var pile_id := _nearest_pile(player_pos.get(sender, Vector3.ZERO), false)
-			if pile_id == -1:
-				return
-			_add_pieces(piles[pile_id], p["load"])
-			_mark("pile:%d" % pile_id)
-		_:
-			_add_pieces(bins, p["load"])
-			_mark("bins")
+	if p["load_kind"] == "":
+		return
+	var pile_id := _nearest_pile(player_pos.get(sender, Vector3.ZERO), false)
+	if pile_id == -1:
+		return
+	_add_pieces(piles[pile_id], p["load"])
+	_mark("pile:%d" % pile_id)
 	_clear_load(p)
 	_mark("player:%d" % sender)
 
@@ -616,12 +557,11 @@ func _on_peer_disconnected(id: int) -> void:
 	_flush()
 
 
-# --- Lógica del host: automatización, ayudantes y ruido ---
+# --- Lógica del host: ayudantes y ruido ---
 
 func _process(delta: float) -> void:
 	if not _world_ready or not multiplayer.is_server():
 		return
-	_update_automation(delta)
 	_update_workers(delta)
 	noise = maxf(0.0, noise - Balance.NOISE_DECAY * delta)
 	for id in _player_noise.keys():
@@ -633,51 +573,17 @@ func _process(delta: float) -> void:
 		_send_streams()
 
 
-func _update_automation(delta: float) -> void:
-	var wheel := upgrade_value("wheel")
-	if wheel > 0.0 and piece_sum(hopper) > 0:
-		_wheel_acc += wheel * delta
-		var to_sort := int(_wheel_acc)
-		if to_sort > 0:
-			_wheel_acc -= to_sort
-			_sort_from_hopper(to_sort)
-	else:
-		_wheel_acc = 0.0
-
-	# Cinta: lleva piezas clasificadas a la primera figura que las necesite.
-	var chute := upgrade_value("chute")
-	if chute > 0.0 and piece_sum(bins) > 0:
-		_chute_acc += chute * delta
-		var to_move := int(_chute_acc)
-		if to_move > 0:
-			_chute_acc -= to_move
-			for kind in Balance.KINDS:
-				if to_move <= 0:
-					break
-				for figure_id in figures:
-					var amount := mini(mini(to_move, int(bins[kind])), figure_missing(figure_id, kind))
-					if amount > 0:
-						bins[kind] = int(bins[kind]) - amount
-						to_move -= amount
-						_mark("bins")
-						_place_pieces(figure_id, kind, amount)
-	else:
-		_chute_acc = 0.0
-
-
 func _update_workers(delta: float) -> void:
 	var wanted := int(upgrade_value("workers"))
 	while _workers.size() < wanted:
 		var spawn: Vector3 = anchors.get("worker_spawn", Vector3.ZERO)
-		var offset := Vector3(randf_range(-0.8, 0.8), 0.0, randf_range(-0.5, 0.5))
+		var offset := Vector3(randf_range(-0.6, 0.6), 0.0, randf_range(-0.4, 0.4))
 		_workers.append({
 			"pos": spawn + offset, "offset": offset, "state": "idle", "t": 0.0, "pile": -1,
-			"pieces": _zero_pieces(),
+			"figure": -1, "pieces": _zero_pieces(),
 		})
-	if not anchors.has("hopper_point"):
-		return
-	var hopper_point: Vector3 = anchors["hopper_point"]
 	var pile_points: Dictionary = anchors.get("piles", {})
+	var table_points: Dictionary = anchors.get("tables", {})
 	for worker in _workers:
 		var offset: Vector3 = worker["offset"]
 		match worker["state"]:
@@ -693,7 +599,7 @@ func _update_workers(delta: float) -> void:
 				var pile_id := int(worker["pile"])
 				if not pile_points.has(pile_id) or piece_sum(piles[pile_id]) == 0:
 					worker["state"] = "idle"
-				elif _walk(worker, pile_points[pile_id] + offset, delta):
+				elif _walk(worker, pile_points[pile_id] + offset * 0.3, delta):
 					worker["state"] = "scoop"
 					worker["t"] = Balance.WORKER_SCOOP_TIME
 			"scoop":
@@ -701,24 +607,47 @@ func _update_workers(delta: float) -> void:
 				if float(worker["t"]) <= 0.0:
 					var pile_id := int(worker["pile"])
 					var taken := _take_mixed(piles[pile_id], Balance.WORKER_CAPACITY)
-					if piece_sum(taken) == 0:
-						worker["state"] = "idle"
-					else:
-						worker["pieces"] = taken
-						worker["state"] = "to_hopper"
-						_mark("pile:%d" % pile_id)
-			"to_hopper":
-				if _walk(worker, hopper_point + offset * 0.5, delta):
-					worker["state"] = "dump"
-					worker["t"] = Balance.WORKER_DUMP_TIME
-			"dump":
+					_mark("pile:%d" % pile_id)
+					worker["pieces"] = taken
+					_send_worker_to_table(worker)
+			"to_table":
+				var figure_id := int(worker["figure"])
+				if not table_points.has(figure_id):
+					_send_worker_to_table(worker)
+				elif _walk(worker, table_points[figure_id] + offset * 0.5, delta):
+					worker["state"] = "place"
+					worker["t"] = Balance.WORKER_PLACE_TIME
+			"place":
 				worker["t"] = float(worker["t"]) - delta
 				if float(worker["t"]) <= 0.0:
-					_add_pieces(hopper, worker["pieces"])
-					worker["pieces"] = _zero_pieces()
-					worker["state"] = "idle"
-					worker["t"] = 0.0
-					_mark("hopper")
+					_give_to_figure(int(worker["figure"]), worker["pieces"])
+					_send_worker_to_table(worker)
+
+
+## Manda al ayudante a la mesa que más piezas de su carga necesita. Si ya no
+## lleva nada (o nadie necesita lo que lleva), lo devuelve a buscar.
+func _send_worker_to_table(worker: Dictionary) -> void:
+	if piece_sum(worker["pieces"]) == 0:
+		worker["state"] = "idle"
+		worker["t"] = 0.0
+		return
+	var best := -1
+	var best_amount := 0
+	for figure_id in figures:
+		var amount := figure_takes(figure_id, worker["pieces"])
+		if amount > best_amount:
+			best_amount = amount
+			best = int(figure_id)
+	if best == -1:
+		var pile_id := _nearest_pile(worker["pos"], false)
+		if pile_id != -1:
+			_add_pieces(piles[pile_id], worker["pieces"])
+			_mark("pile:%d" % pile_id)
+		worker["pieces"] = _zero_pieces()
+		worker["state"] = "idle"
+		return
+	worker["figure"] = best
+	worker["state"] = "to_table"
 
 
 ## Mueve al ayudante hacia el objetivo. Devuelve true al llegar.
@@ -840,13 +769,19 @@ func _place_pieces(figure_id: int, kind: String, amount: int) -> void:
 	_check_figure(figure_id)
 
 
-func _sort_from_hopper(amount: int) -> void:
-	var moved := _take_mixed(hopper, amount)
-	if piece_sum(moved) == 0:
-		return
-	_add_pieces(bins, moved)
-	_mark("hopper")
-	_mark("bins")
+## Pasa a la figura las piezas que necesita de "pieces" (y las quita de ahí).
+## Devuelve cuántas ha colocado.
+func _give_to_figure(figure_id: int, pieces: Dictionary) -> int:
+	if not figures.has(figure_id):
+		return 0
+	var placed := 0
+	for kind in Balance.KINDS:
+		var amount := mini(int(pieces.get(kind, 0)), figure_missing(figure_id, kind))
+		if amount > 0:
+			pieces[kind] = int(pieces[kind]) - amount
+			_place_pieces(figure_id, kind, amount)
+			placed += amount
+	return placed
 
 
 ## Saca "amount" piezas de "source" respetando la proporción de cada color.

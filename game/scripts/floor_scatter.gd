@@ -7,7 +7,6 @@ extends Node3D
 const PATCH_SCENE := preload("res://scenes/brick_patch.tscn")
 # Zonas sin piezas: [centro x, centro z, medio ancho, medio fondo].
 const AVOID := [
-	[0.0, 0.0, 1.5, 1.0],  # clasificadora
 	[8.4, 4.5, 0.7, 0.9],  # mueble del tocadiscos
 	[0.0, -6.6, 1.5, 0.6],  # estantería
 	[-8.2, -6.2, 0.8, 0.8],  # planta

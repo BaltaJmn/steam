@@ -293,9 +293,7 @@ func _refresh_info() -> void:
 	var lines := PackedStringArray()
 	lines.append("figuras  %d / %d" % [Game.figures_done(), Game.figures.size()])
 	lines.append("piezas  %d / %d" % [Game.pieces_placed(), Game.pieces_total()])
-	lines.append("en el suelo %d · tolva %d · cubetas %d" % [
-		Game.floor_total(), Game.piece_sum(Game.hopper), Game.piece_sum(Game.bins),
-	])
+	lines.append("en el suelo  %d" % Game.floor_total())
 	var hidden := Game.items.size() - Game.items_placed()
 	if hidden > 0:
 		lines.append("piezas especiales por poner  %d" % hidden)
@@ -315,10 +313,14 @@ func _refresh_carry() -> void:
 	var load_kind: String = data["load_kind"]
 	if item_id != -1 and Game.items.has(item_id):
 		_carry.text = "Llevas: %s · [Q] soltar" % Balance.item_name(Game.items[item_id]["type"])
-	elif load_kind == "mixed":
-		_carry.text = "Llevas: %d / %d piezas mezcladas · [Q] devolver" % [Game.load_total(data), Game.capacity()]
 	elif load_kind != "":
-		_carry.text = "Llevas: %d / %d %s · [Q] devolver" % [Game.load_total(data), Game.capacity(), Balance.pieces_name(load_kind)]
+		# Qué colores llevas, para saber a qué mesa ir.
+		var parts := PackedStringArray()
+		for kind in Balance.KINDS:
+			var amount := int(data["load"].get(kind, 0))
+			if amount > 0:
+				parts.append("%d %s" % [amount, Balance.KIND_NAMES[kind]])
+		_carry.text = "cesta %d/%d: %s · [Q] devolver" % [Game.load_total(data), Game.capacity(), ", ".join(parts)]
 	else:
 		_carry.text = ""
 

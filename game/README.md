@@ -28,21 +28,20 @@ Para jugar con un amigo por internet en el prototipo, el host tiene que abrir el
 | Ratón | Mirar |
 | Shift | Correr |
 | Espacio | Saltar |
-| E / clic izquierdo | Interactuar (mantener pulsado en los montones y en la manivela) |
+| E / clic izquierdo | Interactuar (mantener pulsado en los grupitos de piezas) |
 | Q | Soltar lo que llevas (las piezas vuelven a su sitio) |
 | Esc | Pausa / cerrar menús |
 
 ## El bucle
 
 ```
-Grupitos de piezas por el suelo ──[E recoger]──► cesta de piezas mezcladas
-   ──► tolva de la clasificadora (en el centro) ──[mantener E en la manivela]──► 6 cubetas, una por color
-   ──[E coger un color]──► mesa cuya figura lo necesite ──► los bloques aparecen en su sitio
+Grupitos de piezas por el suelo ──[E recoger]──► cesta con piezas de varios colores
+   ──► cualquier mesa [E]: su clasificador se queda solo lo que necesita ──► los bloques aparecen en su sitio
 Piezas especiales (ojos, puerta, manzana, bandera, ventanilla, con un brillito) ──[E coger]──► mira su mesa y E
-Pegatinas ──► tablón de MEJORAS (compartidas): cesta, puñados, manivela, ayudantes, motorcito, cinta
+Pegatinas ──► tablón de MEJORAS (compartidas): cesta, puñados, zapatillas, lupa, ayudantes de cuerda
 ```
 
-**Objetivo:** montar las 10 figuras (280 piezas + 9 piezas especiales). Mira también debajo de las mesas. Mirar una mesa sin llevar nada te dice qué colores le faltan.
+**Objetivo:** montar las 10 figuras (280 piezas + 9 piezas especiales). Mira también debajo de las mesas. El clasificador de cada mesa enseña, por colores, cuántas piezas lleva y cuántas necesita.
 
 ## Dónde tocar cada cosa
 
@@ -50,7 +49,7 @@ Pegatinas ──► tablón de MEJORAS (compartidas): cesta, puñados, manivela,
 |---|---|
 | **Las figuras** (forma, colores, piezas especiales) | `scripts/figure_data.gd`: cada figura son capas de caracteres, fáciles de editar |
 | Números (precios, velocidades, cuántas piezas se cogen...) | `scripts/balance.gd` |
-| Dónde está cada cosa (mesas, máquina, piezas especiales) | `scenes/world.tscn` (ábrelo en el editor y mueve los nodos) |
+| Dónde está cada cosa (mesas, piezas especiales, tablón) | `scenes/world.tscn` (ábrelo en el editor y mueve los nodos) |
 | Cuántos grupitos de piezas hay y por dónde | `scripts/floor_scatter.gd` (y su nodo `FloorScatter` en `world.tscn`) |
 | Colores, materiales y el bloque con pivotes | `scripts/visuals.gd` |
 | La habitación (paredes, ventana, luces, muebles, filtro lofi) | `scripts/room.gd` |

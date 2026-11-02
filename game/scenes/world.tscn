@@ -2,7 +2,6 @@
 
 [ext_resource type="Script" path="res://scripts/world.gd" id="1_world"]
 [ext_resource type="Script" path="res://scripts/room.gd" id="2_room"]
-[ext_resource type="PackedScene" path="res://scenes/sorter.tscn" id="3_sorter"]
 [ext_resource type="PackedScene" path="res://scenes/figure.tscn" id="4_figure"]
 [ext_resource type="Script" path="res://scripts/floor_scatter.gd" id="5_scatter"]
 [ext_resource type="PackedScene" path="res://scenes/item.tscn" id="6_item"]
@@ -14,8 +13,6 @@ script = ExtResource("1_world")
 
 [node name="Room" type="Node3D" parent="."]
 script = ExtResource("2_room")
-
-[node name="Sorter" parent="." instance=ExtResource("3_sorter")]
 
 [node name="Tables" type="Node3D" parent="."]
 

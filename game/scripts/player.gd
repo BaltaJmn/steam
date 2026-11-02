@@ -148,7 +148,7 @@ func _physics_process(delta: float) -> void:
 		if Input.is_action_just_pressed("jump") and is_on_floor():
 			velocity.y = JUMP_VELOCITY
 	var sprinting := controls and Input.is_action_pressed("sprint") and input.length() > 0.1
-	var speed := (SPRINT_SPEED if sprinting else WALK_SPEED) * _load_slowdown()
+	var speed := (SPRINT_SPEED if sprinting else WALK_SPEED) * _load_slowdown() * Game.upgrade_value("speed")
 	var direction := (transform.basis * Vector3(input.x, 0.0, input.y)).normalized()
 	# Tras un manotazo de papá casi no hay control durante un momento.
 	var control := 1.0 if _knock_timer <= 0.0 else 0.05

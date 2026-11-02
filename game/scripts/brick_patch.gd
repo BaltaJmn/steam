@@ -14,6 +14,8 @@ var _multimesh: MultiMesh
 var _layout := []  # [[color, Transform3D], ...] ordenado de abajo arriba
 var _layout_counts := {}  # cuántas piezas de cada color caben en el reparto actual
 var _last_scoop := 0.0
+var _glint: MeshInstance3D
+var _time := 0.0
 
 
 func _ready() -> void:
@@ -36,6 +38,12 @@ func _ready() -> void:
 	collision.position = Vector3(0, 0.125, 0)
 	area.add_child(collision)
 	add_child(area)
+	# Brillito de la mejora "Lupa": delata los grupitos que quedan.
+	var spark := SphereMesh.new()
+	spark.radius = 0.025
+	spark.height = 0.05
+	_glint = Visuals.mesh_instance(self, spark, Vector3(0, 0.45, 0), "glint")
+	_glint.visible = false
 	if Engine.is_editor_hint():
 		var preview := {}
 		for i in EDITOR_PREVIEW:
@@ -94,8 +102,16 @@ func _show(counts: Dictionary) -> void:
 	_multimesh.visible_instance_count = _layout.size()
 
 
+func _process(delta: float) -> void:
+	if Engine.is_editor_hint() or not _glint.visible:
+		return
+	_time += delta
+	_glint.position.y = 0.45 + sin(_time * 2.0 + float(pile_id)) * 0.05
+	_glint.scale = Vector3.ONE * (0.7 + 0.5 * absf(sin(_time * 2.5 + float(pile_id))))
+
+
 func _on_changed(what: String, id: int) -> void:
-	if what == "all" or (what == "pile" and id == pile_id):
+	if what == "all" or (what == "pile" and id == pile_id) or what == "economy":
 		_refresh()
 
 
@@ -115,6 +131,7 @@ func _refresh() -> void:
 	if grown:
 		_build_layout(wanted)
 	_show(counts)
+	_glint.visible = Game.upgrade_level("lens") > 0 and Game.piece_sum(counts) > 0
 
 
 func get_prompt(_player: Node, _part: String) -> String:

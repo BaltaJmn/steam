@@ -21,7 +21,6 @@ const PIECES_PER_PAY := 1  # pegatinas por cada pieza colocada en una figura
 const ITEM_PAY := 5  # pegatinas por cada pieza especial colocada
 const FIGURE_BONUS := 10  # pegatinas al terminar una figura
 const SCOOP_COOLDOWN := 0.35
-const CRANK_INTERVAL := 0.25
 
 # --- Ruido (desactivado: el tono es cozy) ---
 # El sistema sigue en Game por si se quiere recuperar una amenaza suave.
@@ -32,19 +31,18 @@ const NOISE_DECAY := 4.0
 const NOISE_SPRINT := 14.0
 const NOISE_LAND := 7.0
 const NOISE_LAND_MIN_SPEED := 3.0
-const NOISE_DUMP := 5.0
-const NOISE_CRANK := 0.6
 const NOISE_DROP := 8.0
 
 # --- Ayudantes contratados ---
+# Muñequitos de cuerda: recogen piezas del suelo y las llevan a las mesas.
 const WORKER_CAPACITY := 4
 const WORKER_SPEED := 1.4
 const WORKER_SCOOP_TIME := 1.2
-const WORKER_DUMP_TIME := 0.6
+const WORKER_PLACE_TIME := 0.6
 
 # --- Mejoras (compartidas por todo el grupo) ---
 # "values" tiene un valor más que "costs": el del nivel 0.
-const UPGRADE_ORDER := ["sack", "shovel", "crank", "workers", "wheel", "chute"]
+const UPGRADE_ORDER := ["sack", "shovel", "speed", "lens", "workers"]
 const UPGRADES := {
 	"sack": {
 		"name": "Cesta más grande", "desc": "Llevas más piezas por viaje",
@@ -54,21 +52,17 @@ const UPGRADES := {
 		"name": "Recoger a puñados", "desc": "Coges más piezas de cada vez",
 		"costs": [5, 12, 25], "values": [2, 3, 5, 8],
 	},
-	"crank": {
-		"name": "Manivela engrasada", "desc": "Cada vuelta clasifica más piezas",
-		"costs": [5, 12, 25], "values": [1, 2, 3, 5],
+	"speed": {
+		"name": "Zapatillas cómodas", "desc": "Andas más rápido",
+		"costs": [8, 20], "values": [1.0, 1.15, 1.3],
+	},
+	"lens": {
+		"name": "Lupa", "desc": "Los grupitos de piezas que quedan brillan un poco",
+		"costs": [12], "values": [0, 1],
 	},
 	"workers": {
-		"name": "Contratar ayudante", "desc": "Lleva piezas del suelo a la clasificadora",
+		"name": "Ayudante de cuerda", "desc": "Recoge piezas y las lleva a las mesas que las necesitan",
 		"costs": [12, 25, 40], "values": [0, 1, 2, 3],
-	},
-	"wheel": {
-		"name": "Motorcito", "desc": "La clasificadora gira sola (piezas/s)",
-		"costs": [20, 40], "values": [0, 1.5, 3.0],
-	},
-	"chute": {
-		"name": "Cinta transportadora", "desc": "Las piezas clasificadas van solas a las figuras (piezas/s)",
-		"costs": [25, 45], "values": [0, 1.0, 2.5],
 	},
 }
 
