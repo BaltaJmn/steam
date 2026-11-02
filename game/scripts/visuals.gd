@@ -55,6 +55,7 @@ static func mat(key: String) -> StandardMaterial3D:
 		"bricks":
 			# Bloques coloreados por instancia (MultiMesh).
 			m.vertex_color_use_as_albedo = true
+			m.vertex_color_is_srgb = true  # para que salgan igual que los demás materiales
 			m.roughness = 0.45
 		"glass":
 			m.albedo_color = Color(0.85, 0.93, 1.0, 0.35)

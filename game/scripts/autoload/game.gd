@@ -21,6 +21,7 @@ const NET_INTERVAL := 0.1
 
 # --- Estado sincronizado (lo manda el host) ---
 var piles := {}  # id del montón -> {color: piezas}
+var piles_start := {}  # lo mismo al empezar (para dibujar los montones igual en todos)
 var hopper := {}  # {color: piezas} en la tolva
 var bins := {}  # {color: piezas} ya clasificadas
 var figures := {}  # id -> {model, need: {color: n}, have: {color: n}, done}
@@ -59,6 +60,7 @@ func _ready() -> void:
 
 func reset() -> void:
 	piles = {}
+	piles_start = {}
 	hopper = _zero_pieces()
 	bins = _zero_pieces()
 	figures = {}
@@ -108,6 +110,7 @@ func server_setup(world_figures: Dictionary, pile_ids: Array, world_items: Dicti
 			for i in int(needed[kind]):
 				var pile_id = pile_ids[rng.randi() % pile_ids.size()]
 				piles[pile_id][kind] = int(piles[pile_id][kind]) + 1
+	piles_start = piles.duplicate(true)
 	_world_ready = true
 	changed.emit("all", 0)
 	for pending in _pending_hellos:
@@ -345,7 +348,7 @@ func _emit_part(key: String) -> void:
 
 func _snapshot() -> Dictionary:
 	return {
-		"piles": piles, "hopper": hopper, "bins": bins, "figures": figures, "items": items,
+		"piles": piles, "piles_start": piles_start, "hopper": hopper, "bins": bins, "figures": figures, "items": items,
 		"slots": slots, "players": players, "wallet": wallet, "upgrades": upgrades,
 		"noise": noise, "workers": workers_net, "completed": completed,
 	}
@@ -354,6 +357,7 @@ func _snapshot() -> Dictionary:
 @rpc("authority", "call_remote", "reliable")
 func _rpc_snapshot(snapshot: Dictionary) -> void:
 	piles = snapshot["piles"]
+	piles_start = snapshot["piles_start"]
 	hopper = snapshot["hopper"]
 	bins = snapshot["bins"]
 	figures = snapshot["figures"]
